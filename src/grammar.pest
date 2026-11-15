@@ -1,0 +1,72 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+CNAME = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+INTEGER = @{ "0" | (('1'..'9') ~ ASCII_DIGIT*) }
+
+start = { SOI ~ module ~ EOI }
+
+module = { top_definition+ }
+
+top_definition = { import_definition | struct_definition | function_definition }
+
+import_definition = { _KW_IMPORT ~ CNAME ~ ("." ~ CNAME)* ~ ";" }
+
+struct_definition = { _KW_STRUCT ~ CNAME ~ "{" ~ struct_fields ~ "}" }
+struct_fields = { struct_field* }
+struct_field = { CNAME ~ ":" ~ type ~ ";" }
+
+function_definition = { _KW_FUNCTION ~ CNAME ~ "(" ~ function_arguments ~ ")" ~ type ~ "{" ~ statements ~ "}" }
+function_arguments = { (function_argument ~ ("," ~ function_argument)*)? }
+function_argument = { CNAME ~ ":" ~ type }
+
+statements = { statement* }
+statement = { const_def_statement | var_def_statement | assignment_statement | return_statement | expression_statement }
+
+const_def_statement = { _KW_CONST ~ CNAME ~ ":" ~ type ~ "=" ~ expression ~ ";" }
+var_def_statement = { _KW_VAR ~ CNAME ~ ":" ~ type ~ "=" ~ expression ~ ";" }
+assignment_statement = { expression ~ "=" ~ expression ~ ";" }
+return_statement = { _KW_RETURN ~ expression ~ ";" }
+expression_statement = { expression ~ ";" }
+
+expression = { address_expression | address_variable_expression | array_expression | tuple_expression | add_sub_expression }
+
+address_expression = { "&" ~ expression }
+address_variable_expression = { "&" ~ _KW_VAR ~ expression }
+
+array_expression = { "[" ~ (expression ~ ("," ~ expression)*)? ~ "]" }
+
+tuple_expression = { "(" ~ ")" | "(" ~ expression ~ "," ~ ")" | "(" ~ expression ~ ("," ~ expression)+ ~ ","? ~ ")" }
+
+add_sub_expression = { mul_div_expression ~ ((OP_ADD | OP_SUB) ~ mul_div_expression)* }
+mul_div_expression = { slice_expression ~ ((OP_MUL | OP_DIV) ~ paren_expression)* }
+slice_expression = { index_expression ~ ("[" ~ expression ~ ".." ~ expression ~ "]")* }
+index_expression = { paren_expression ~ ("[" ~ expression ~ "]")* }
+paren_expression = { "(" ~ expression ~ ")" | atom_expression }
+atom_expression = { integer_literal | identifier }
+
+integer_literal = { INTEGER }
+identifier = { CNAME }
+
+type = { range_type }
+range_type = { postfix_type ~ (".." ~ postfix_type)* }
+postfix_type = { primary_type ~ (array_type | slice_type)* }
+primary_type = { trivial_type | pointer_type | variable_pointer_type | tuple_type }
+
+trivial_type = { CNAME }
+pointer_type = { "*" ~ type }
+variable_pointer_type = { "*" ~ _KW_VAR ~ type }
+array_type = { "[" ~ INTEGER ~ "]" }
+slice_type = { "[" ~ "]" }
+tuple_type = { "(" ~ ")" | "(" ~ type ~ "," ~ ")" | "(" ~ type ~ ("," ~ type)+ ~ ","? ~ ")" }
+
+_KW_STRUCT = @{ "struct" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_FUNCTION = @{ "function" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_RETURN = @{ "return" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_LET = @{ "let" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_IMPORT = @{ "import" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_VAR = @{ "var" ~ !(ASCII_ALPHANUMERIC | "_") }
+_KW_CONST = @{ "const" ~ !(ASCII_ALPHANUMERIC | "_") }
+OP_ADD = @{ "+" }
+OP_SUB = @{ "-" }
+OP_MUL = @{ "*" }
+OP_DIV = @{ "/" }
