@@ -168,8 +168,8 @@ pub struct VariablePointerType {
 
 #[derive(Debug, Clone)]
 pub struct ArrayType {
-    pub elem_type: Box<Type>,
     pub size: i64,
+    pub elem_type: Box<Type>,
 }
 
 #[derive(Debug, Clone)]

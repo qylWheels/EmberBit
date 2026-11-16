@@ -190,7 +190,7 @@ Type: Type = {
         => Type::VariablePointer(VariablePointerType { pointee_type: Box::new(t) }),
 
     "[" <size:INTEGER> "]" <t:Type>
-        => Type::Array(ArrayType { elem_type: Box::new(t), size }),
+        => Type::Array(ArrayType { size, elem_type: Box::new(t) }),
 
     "[" "]" <t:Type>
         => Type::Slice(SliceType { elem_type: Box::new(t) }),
