@@ -147,8 +147,7 @@ pub enum Type {
     Pointer(PointerType),
     VariablePointer(VariablePointerType),
     Array(ArrayType),
-    ConstSlice(ConstSliceType),
-    VarSlice(VarSliceType),
+    Slice(SliceType),
     Tuple(TupleType),
     Function(FunctionType),
 }
@@ -175,7 +174,7 @@ pub struct ArrayType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ConstSliceType {
+pub struct SliceType {
     pub elem_type: Box<Type>,
 }
 
