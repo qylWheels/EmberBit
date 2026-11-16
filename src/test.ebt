@@ -7,6 +7,7 @@ function main() i32 {
     a = 12;
     const b: i32 = 2;
     var arr: [5]i32 = [1, 2, 3, 4, 5];
+    arr[3] = 2;
     const slice: []var i32 = arr[var 2..4];
     slice[1] = 10;
     const parr: *[5]i32 = &arr;
