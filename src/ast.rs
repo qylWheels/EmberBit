@@ -73,7 +73,6 @@ pub struct ExpressionStatement {
 #[derive(Debug, Clone)]
 pub enum Expression {
     Address(AddressExpression),
-    AddressVariable(AddressVariableExpression),
     Array(ArrayExpression),
     Tuple(TupleExpression),
     Binary(BinaryExpression),
@@ -85,11 +84,6 @@ pub enum Expression {
 
 #[derive(Debug, Clone)]
 pub struct AddressExpression {
-    pub expr: Box<Expression>,
-}
-
-#[derive(Debug, Clone)]
-pub struct AddressVariableExpression {
     pub expr: Box<Expression>,
 }
 
@@ -145,7 +139,6 @@ pub struct Identifier {
 pub enum Type {
     Trivial(TrivialType),
     Pointer(PointerType),
-    VariablePointer(VariablePointerType),
     Array(ArrayType),
     Slice(SliceType),
     Tuple(TupleType),
@@ -159,11 +152,6 @@ pub struct TrivialType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PointerType {
-    pub pointee_type: Box<Type>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VariablePointerType {
     pub pointee_type: Box<Type>,
 }
 
