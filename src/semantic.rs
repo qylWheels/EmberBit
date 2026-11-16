@@ -20,7 +20,7 @@ type TrivialType = ast::TrivialType;
 type PointerType = ast::PointerType;
 type VariablePointerType = ast::VariablePointerType;
 type ArrayType = ast::ArrayType;
-type ConstSliceType = ast::ConstSliceType;
+type ConstSliceType = ast::SliceType;
 type VarSliceType = ast::VarSliceType;
 type TupleType = ast::TupleType;
 type FunctionType = ast::FunctionType;
@@ -150,6 +150,14 @@ impl SemanticChecker {
                 Ok(new_ctx)
             }
             ast::Statement::VarDef(ast::VarDefStatement { name, ty, expr }) => {
+                // It is not allowed to create variable reference on not-assignable expression.
+                let expr_assignable = self.check_expression_assignable(expr, ctx)?;
+                if !expr_assignable {
+                    return Err(SemanticError::Variable(
+                        "Var statement has non-assignable expression".into(),
+                    ));
+                }
+
                 let expr_type = self.check_expression(expr, ctx)?;
                 let annotation = self.type_annotation_to_type(ty)?;
                 if annotation != expr_type {
@@ -211,8 +219,9 @@ impl SemanticChecker {
             ast::Expression::Index(ast::IndexExpression { base, .. }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let variable = match base_type {
-                    Type::Array(_) => self.check_expression_assignable(base, ctx)?,
-                    Type::VarSlice(_) => true,
+                    Type::Array(_) | Type::Slice(_) => {
+                        self.check_expression_assignable(base, ctx)?
+                    }
                     _ => false,
                 };
                 return Ok(variable);
@@ -280,8 +289,7 @@ impl SemanticChecker {
                 let base_type = self.check_expression(base, ctx)?;
                 let elem_type = match base_type {
                     Type::Array(ast::ArrayType { elem_type, .. }) => *elem_type,
-                    Type::ConstSlice(ast::ConstSliceType { elem_type, .. }) => *elem_type,
-                    Type::VarSlice(ast::VarSliceType { elem_type, .. }) => *elem_type,
+                    Type::Slice(ast::SliceType { elem_type, .. }) => *elem_type,
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
                             "Base expression must be of type Array or Slice, but {:?} is given",
@@ -300,8 +308,7 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, elem_type.clone());
                 Ok(elem_type)
             }
-            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end })
-            | ast::Expression::VarSlice(ast::VarSliceExpression { base, start, end }) => {
+            ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let start_type = self.check_expression(start, ctx)?;
                 let end_type = self.check_expression(end, ctx)?;
@@ -316,15 +323,6 @@ impl SemanticChecker {
                     }
                 };
 
-                if matches!(ast, ast::Expression::VarSlice(_))
-                    && !self.check_expression_assignable(base, ctx)?
-                {
-                    return Err(SemanticError::SliceType(format!(
-                        "VarSlice base must be a variable array, but it is constant for {:?}",
-                        base_type
-                    )));
-                }
-
                 if !matches!(&start_type, Type::Trivial(ast::TrivialType { name }) if name == "i32")
                 {
                     return Err(SemanticError::SliceType(format!(
@@ -338,17 +336,11 @@ impl SemanticChecker {
                         end_type
                     )));
                 }
-                let ty = if matches!(ast, ast::Expression::ConstSlice(_)) {
-                    Type::ConstSlice(ast::ConstSliceType {
-                        elem_type: Box::new(elem_type),
-                    })
-                } else if matches!(ast, ast::Expression::VarSlice(_)) {
-                    Type::VarSlice(ast::VarSliceType {
-                        elem_type: Box::new(elem_type),
-                    })
-                } else {
-                    unreachable!("Unknown slice type");
-                };
+
+                let ty = Type::Slice(ast::SliceType {
+                    elem_type: Box::new(elem_type),
+                });
+
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
