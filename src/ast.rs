@@ -149,6 +149,7 @@ pub enum Type {
     Array(ArrayType),
     Slice(SliceType),
     Tuple(TupleType),
+    Function(FunctionType),
 }
 
 #[derive(Debug, Clone)]
