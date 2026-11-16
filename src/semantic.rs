@@ -209,12 +209,8 @@ impl SemanticChecker {
                 ))),
             },
             ast::Expression::Index(ast::IndexExpression { base, .. }) => {
-                let base_type = self.check_expression(base, ctx)?;
-                match base_type {
-                    Type::Array(_) => Ok(true),
-                    Type::VarSlice(_) => Ok(true),
-                    _ => Ok(false),
-                }
+                let base_variable = self.check_expression_assignable(base, ctx)?;
+                return Ok(base_variable);
             }
             _ => Ok(false),
         }
