@@ -16,6 +16,7 @@ fn main() {
             const b: i32 = 2;
             const arr: [5]i32 = [1, 2, 3, 4, 5];
             const slice: []i32 = arr[2..4];
+            const parr: *[5]i32 = &arr;
             return a + b * 3;
         }
     "#;
