@@ -229,17 +229,13 @@ impl Interpreter {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
                 let index = match index {
                     Value::Int(n) if n >= 0 => n as usize,
-                    _ => return Err(InterpretError::TypeMismatch("index must be int")),
+                    _ => unreachable!(),
                 };
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
                 match base {
                     Value::Array(a) => Ok(a.elements[index].clone()),
-                    Value::Slice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
-                    _ => {
-                        return Err(InterpretError::TypeMismatch(
-                            "index base must be Array or Slice",
-                        ));
-                    }
+                    Value::VarSlice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
+                    _ => unreachable!(),
                 }
             }
             ast::Expression::Identifier(e) => env
