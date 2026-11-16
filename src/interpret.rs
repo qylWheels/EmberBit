@@ -273,7 +273,7 @@ impl Interpreter {
                     }
                     _ => {
                         return Err(InterpretError::TypeMismatch(
-                            "lvalue index base must be Array",
+                            "lvalue index base must be Array or VarSlice",
                         ));
                     }
                 };
