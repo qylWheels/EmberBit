@@ -244,21 +244,23 @@ impl Interpreter {
                 .get_mut(&e.name)
                 .ok_or(InterpretError::TypeMismatch("unbound identifier")),
             ast::Expression::Index(e) => {
+                let index = self.interpret_expression(e.index.as_ref(), &env_copy)?;
+                let index = match index {
+                    Value::Int(n) if n >= 0 => n as usize,
+                    _ => return Err(InterpretError::TypeMismatch("lvalue index must be int")),
+                };
                 let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
-                let base = match base {
-                    Value::Array(a) => a,
+                match base {
+                    Value::Array(arr) => return Ok(&mut arr.elements[index]),
+                    Value::Slice(slice) => {
+                        return Ok(&mut slice.array.elements[slice.start + index]);
+                    }
                     _ => {
                         return Err(InterpretError::TypeMismatch(
                             "lvalue index base must be Array",
                         ));
                     }
                 };
-                let index = self.interpret_expression(e.index.as_ref(), &env_copy)?;
-                let index = match index {
-                    Value::Int(n) if n >= 0 => n as usize,
-                    _ => return Err(InterpretError::TypeMismatch("lvalue index must be int")),
-                };
-                Ok(&mut base.elements[index])
             }
             _ => Err(InterpretError::UnknownExpression(
                 "unknown lvalue expression",
