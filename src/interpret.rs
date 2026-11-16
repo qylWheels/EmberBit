@@ -218,7 +218,7 @@ impl Interpreter {
                         end,
                     }))
                 } else {
-                    Ok(Value::ConstSlice(ConstSlice {
+                    Ok(Value::VarSlice(VarSlice {
                         array: Box::new(array),
                         start,
                         end,
