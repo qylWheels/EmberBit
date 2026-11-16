@@ -306,6 +306,15 @@ impl SemanticChecker {
                 let start_type = self.check_expression(start, ctx)?;
                 let end_type = self.check_expression(end, ctx)?;
 
+                if matches!(ast, ast::Expression::VarSlice(_))
+                    && !self.check_expression_assignable(base, ctx)?
+                {
+                    return Err(SemanticError::SliceType(format!(
+                        "VarSlice base must be a variable array, but it is constant for {:?}",
+                        base_type
+                    )));
+                }
+
                 let elem_type = match &base_type {
                     Type::Array(ast::ArrayType { elem_type, .. }) => elem_type.as_ref().clone(),
                     other => {
