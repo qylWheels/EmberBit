@@ -181,3 +181,9 @@ pub struct SliceType {
 pub struct TupleType {
     pub elem_types: Vec<Type>,
 }
+
+#[derive(Debug, Clone)]
+pub struct FunctionType {
+    pub param_types: Vec<Type>,
+    pub return_type: Box<Type>,
+}
