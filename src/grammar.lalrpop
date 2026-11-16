@@ -200,10 +200,10 @@ Type: Type = {
         => Type::Array(ArrayType { size, elem_type: Box::new(t) }),
 
     "[" "]" "const" <t:Type>
-        => Type::ConstSlice(SliceType { elem_type: Box::new(t) }),
+        => Type::ConstSlice(ConstSliceType { elem_type: Box::new(t) }),
 
     "[" "]" "var" <t:Type>
-        => Type::VarSlice(SliceType { elem_type: Box::new(t) }),
+        => Type::VarSlice(VarSliceType { elem_type: Box::new(t) }),
 
     "(" ")" => Type::Tuple(TupleType { elem_types: vec![] }),
 
