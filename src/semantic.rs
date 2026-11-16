@@ -280,6 +280,7 @@ impl SemanticChecker {
                 let elem_type = match base_type {
                     Type::Array(ast::ArrayType { elem_type, .. }) => *elem_type,
                     Type::ConstSlice(ast::ConstSliceType { elem_type, .. }) => *elem_type,
+                    Type::VarSlice(ast::VarSliceType { elem_type, .. }) => *elem_type,
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
                             "Base expression must be of type Array or Slice, but {:?} is given",
