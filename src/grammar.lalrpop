@@ -205,10 +205,4 @@ Type: Type = {
         elem_types.extend(rest);
         Type::Tuple(TupleType { elem_types })
     },
-
-    <start:Type> ".." <end:Type>
-        => Type::Range(RangeType {
-            start: Box::new(start),
-            end: Box::new(end),
-        }),
 };
