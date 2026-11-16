@@ -265,7 +265,7 @@ impl Interpreter {
                 let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
                 match base {
                     Value::Array(arr) => return Ok(&mut arr.elements[index]),
-                    Value::Slice(slice) => {
+                    Value::VarSlice(slice) => {
                         return Ok(&mut slice.array.elements[slice.start + index]);
                     }
                     _ => {
