@@ -209,17 +209,21 @@ impl Interpreter {
                 }))
             }
             ast::Expression::Index(e) => {
-                let base = self.interpret_expression(e.base.as_ref(), env)?;
-                let base = match base {
-                    Value::Array(a) => a,
-                    _ => return Err(InterpretError::TypeMismatch("index base must be Array")),
-                };
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
                 let index = match index {
                     Value::Int(n) if n >= 0 => n as usize,
                     _ => return Err(InterpretError::TypeMismatch("index must be int")),
                 };
-                Ok(base.elements[index].clone())
+                let base = self.interpret_expression(e.base.as_ref(), env)?;
+                match base {
+                    Value::Array(a) => Ok(a.elements[index].clone()),
+                    Value::Slice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
+                    _ => {
+                        return Err(InterpretError::TypeMismatch(
+                            "index base must be Array or Slice",
+                        ));
+                    }
+                }
             }
             ast::Expression::Identifier(e) => env
                 .get(&e.name)
