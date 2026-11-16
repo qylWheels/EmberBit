@@ -189,10 +189,10 @@ Type: Type = {
     "*" "var" <t:Type>
         => Type::VariablePointer(VariablePointerType { pointee_type: Box::new(t) }),
 
-    <t:Type> "[" <size:INTEGER> "]"
+    "[" <size:INTEGER> "]" <t:Type>
         => Type::Array(ArrayType { elem_type: Box::new(t), size }),
 
-    <t:Type> "[" "]"
+    "[" "]" <t:Type>
         => Type::Slice(SliceType { elem_type: Box::new(t) }),
 
     "(" ")" => Type::Tuple(TupleType { elem_types: vec![] }),
