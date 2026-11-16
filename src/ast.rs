@@ -77,7 +77,8 @@ pub enum Expression {
     Array(ArrayExpression),
     Tuple(TupleExpression),
     Binary(BinaryExpression),
-    Slice(SliceExpression),
+    ConstSlice(ConstSliceExpression),
+    VarSlice(VarSliceExpression),
     Index(IndexExpression),
     Integer(IntegerLiteral),
     Identifier(Identifier),
@@ -119,7 +120,14 @@ pub struct BinaryExpression {
 }
 
 #[derive(Debug, Clone)]
-pub struct SliceExpression {
+pub struct ConstSliceExpression {
+    pub base: Box<Expression>,
+    pub start: Box<Expression>,
+    pub end: Box<Expression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct VarSliceExpression {
     pub base: Box<Expression>,
     pub start: Box<Expression>,
     pub end: Box<Expression>,
