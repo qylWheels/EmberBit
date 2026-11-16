@@ -1,0 +1,214 @@
+use crate::ast::*;
+
+grammar;
+
+CNAME: String = r"[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string();
+INTEGER: i64 = r"0|[1-9][0-9]*" => <>.parse().unwrap();
+
+pub Module: Module = {
+    <defs:TopDefinition+> => Module { top_definitions: defs },
+};
+
+TopDefinition: TopDefinition = {
+    <i:ImportDefinition>   => TopDefinition::Import(i),
+    <s:StructDefinition>   => TopDefinition::Struct(s),
+    <f:FunctionDefinition> => TopDefinition::Function(f),
+};
+
+ImportDefinition: ImportDefinition = {
+    "import" <first:CNAME> <rest:("." <CNAME>)*> ";" => {
+        let mut parts = vec![first];
+        parts.extend(rest);
+        ImportDefinition { parts }
+    },
+};
+
+StructDefinition: StructDefinition = {
+    "struct" <name:CNAME> "{" <fields:StructField*> "}" => StructDefinition { name, fields },
+};
+
+StructField: (String, Type) = {
+    <name:CNAME> ":" <ty:Type> ";" => (name, ty),
+};
+
+FunctionDefinition: FunctionDefinition = {
+    "function" <name:CNAME> "(" <params:FunctionArguments> ")" <ret:Type> "{" <body:Statement*> "}"
+        => FunctionDefinition {
+            name,
+            params,
+            return_type: ret,
+            body,
+        },
+};
+
+FunctionArguments: Vec<(String, Type)> = {
+    <args:(<FunctionArgument> ",")*> <last:FunctionArgument?> => {
+        let mut v = args;
+        if let Some(l) = last {
+            v.push(l);
+        }
+        v
+    },
+};
+
+FunctionArgument: (String, Type) = {
+    <name:CNAME> ":" <ty:Type> => (name, ty),
+};
+
+Statement: Statement = {
+    "const" <name:CNAME> ":" <ty:Type> "=" <expr:Expression> ";"
+        => Statement::ConstDef(ConstDefStatement { name, ty, expr }),
+
+    "var" <name:CNAME> ":" <ty:Type> "=" <expr:Expression> ";"
+        => Statement::VarDef(VarDefStatement { name, ty, expr }),
+
+    <lhs:Expression> "=" <rhs:Expression> ";"
+        => Statement::Assignment(AssignmentStatement { lhs, rhs }),
+
+    "return" <expr:Expression> ";"
+        => Statement::Return(ReturnStatement { expr }),
+
+    <expr:Expression> ";"
+        => Statement::Expression(ExpressionStatement { expr }),
+};
+
+Expression: Expression = {
+    AddressExpression,
+    AddressVariableExpression,
+    ArrayExpression,
+    TupleExpression,
+    AddSubExpression,
+};
+
+AddressExpression: Expression = {
+    "&" <expr:Expression>
+        => Expression::Address(AddressExpression { expr: Box::new(expr) }),
+};
+
+AddressVariableExpression: Expression = {
+    "&" "var" <expr:Expression>
+        => Expression::AddressVariable(AddressVariableExpression { expr: Box::new(expr) }),
+};
+
+ArrayExpression: Expression = {
+    "[" "]" => Expression::Array(ArrayExpression { elements: vec![] }),
+
+    "[" <first:Expression> <rest:("," <Expression>)*> "]" => {
+        let mut elements = vec![first];
+        elements.extend(rest);
+        Expression::Array(ArrayExpression { elements })
+    },
+};
+
+TupleExpression: Expression = {
+    "(" ")" => Expression::Tuple(TupleExpression { elements: vec![] }),
+
+    "(" <e:Expression> "," ")"
+        => Expression::Tuple(TupleExpression { elements: vec![e] }),
+
+    "(" <first:Expression> <rest:("," <Expression>)+> ","? ")" => {
+        let mut elements = vec![first];
+        elements.extend(rest);
+        Expression::Tuple(TupleExpression { elements })
+    },
+};
+
+AddSubExpression: Expression = {
+    <l:AddSubExpression> "+" <r:MulDivExpression>
+        => Expression::Binary(BinaryExpression {
+            lhs: Box::new(l),
+            op: BinaryOp::Add,
+            rhs: Box::new(r),
+        }),
+
+    <l:AddSubExpression> "-" <r:MulDivExpression>
+        => Expression::Binary(BinaryExpression {
+            lhs: Box::new(l),
+            op: BinaryOp::Sub,
+            rhs: Box::new(r),
+        }),
+
+    MulDivExpression,
+};
+
+MulDivExpression: Expression = {
+    <l:MulDivExpression> "*" <r:ParenExpression>
+        => Expression::Binary(BinaryExpression {
+            lhs: Box::new(l),
+            op: BinaryOp::Mul,
+            rhs: Box::new(r),
+        }),
+
+    <l:MulDivExpression> "/" <r:ParenExpression>
+        => Expression::Binary(BinaryExpression {
+            lhs: Box::new(l),
+            op: BinaryOp::Div,
+            rhs: Box::new(r),
+        }),
+
+    SliceExpression,
+};
+
+SliceExpression: Expression = {
+    <base:IndexExpression> "[" <start:Expression> ".." <end:Expression> "]"
+        => Expression::Slice(SliceExpression {
+            base: Box::new(base),
+            start: Box::new(start),
+            end: Box::new(end),
+        }),
+
+    IndexExpression,
+};
+
+IndexExpression: Expression = {
+    <base:IndexExpression> "[" <index:Expression> "]"
+        => Expression::Index(IndexExpression {
+            base: Box::new(base),
+            index: Box::new(index),
+        }),
+
+    ParenExpression,
+};
+
+ParenExpression: Expression = {
+    "(" <e:Expression> ")" => e,
+    AtomExpression,
+};
+
+AtomExpression: Expression = {
+    <n:INTEGER> => Expression::Integer(IntegerLiteral { value: n }),
+    <name:CNAME> => Expression::Identifier(Identifier { name }),
+};
+
+Type: Type = {
+    <name:CNAME> => Type::Trivial(TrivialType { name }),
+
+    "*" <t:Type>
+        => Type::Pointer(PointerType { pointee_type: Box::new(t) }),
+
+    "*" "var" <t:Type>
+        => Type::VariablePointer(VariablePointerType { pointee_type: Box::new(t) }),
+
+    <t:Type> "[" <size:INTEGER> "]"
+        => Type::Array(ArrayType { elem_type: Box::new(t), size }),
+
+    <t:Type> "[" "]"
+        => Type::Slice(SliceType { elem_type: Box::new(t) }),
+
+    "(" ")" => Type::Tuple(TupleType { elem_types: vec![] }),
+
+    "(" <t:Type> "," ")"
+        => Type::Tuple(TupleType { elem_types: vec![t] }),
+
+    "(" <first:Type> <rest:("," <Type>)+> ","? ")" => {
+        let mut elem_types = vec![first];
+        elem_types.extend(rest);
+        Type::Tuple(TupleType { elem_types })
+    },
+
+    <start:Type> ".." <end:Type>
+        => Type::Range(RangeType {
+            start: Box::new(start),
+            end: Box::new(end),
+        }),
+};
