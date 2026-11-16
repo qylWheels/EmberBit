@@ -19,14 +19,7 @@ pub struct Array {
 }
 
 #[derive(Debug, Clone)]
-pub struct ConstSlice {
-    pub array: Box<Array>,
-    pub start: usize,
-    pub end: usize,
-}
-
-#[derive(Debug, Clone)]
-pub struct VarSlice {
+pub struct Slice {
     pub array: Box<Array>,
     pub start: usize,
     pub end: usize,
@@ -43,8 +36,7 @@ pub enum Value {
     Pointer(Pointer),
     VariablePointer(VariablePointer),
     Array(Array),
-    ConstSlice(ConstSlice),
-    VarSlice(VarSlice),
+    Slice(Slice),
     Tuple(Tuple),
 }
 
@@ -194,8 +186,7 @@ impl Interpreter {
                 };
                 Ok(Value::Int(v))
             }
-            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end })
-            | ast::Expression::VarSlice(ast::VarSliceExpression { base, start, end }) => {
+            ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
                 let array = self.interpret_expression(base.as_ref(), env)?;
                 let array = match array {
                     Value::Array(a) => a,
@@ -211,19 +202,11 @@ impl Interpreter {
                     Value::Int(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
-                if matches!(expr, ast::Expression::ConstSlice(_)) {
-                    Ok(Value::ConstSlice(ConstSlice {
-                        array: Box::new(array),
-                        start,
-                        end,
-                    }))
-                } else {
-                    Ok(Value::VarSlice(VarSlice {
-                        array: Box::new(array),
-                        start,
-                        end,
-                    }))
-                }
+                Ok(Value::Slice(Slice {
+                    array: Box::new(array),
+                    start,
+                    end,
+                }))
             }
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
@@ -234,10 +217,7 @@ impl Interpreter {
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
                 match base {
                     Value::Array(a) => Ok(a.elements[index].clone()),
-                    Value::ConstSlice(slice) => {
-                        Ok(slice.array.elements[slice.start + index].clone())
-                    }
-                    Value::VarSlice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
+                    Value::Slice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
                     _ => unreachable!(),
                 }
             }
@@ -268,7 +248,7 @@ impl Interpreter {
                 let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
                 match base {
                     Value::Array(arr) => return Ok(&mut arr.elements[index]),
-                    Value::VarSlice(slice) => {
+                    Value::Slice(slice) => {
                         return Ok(&mut slice.array.elements[slice.start + index]);
                     }
                     _ => {
