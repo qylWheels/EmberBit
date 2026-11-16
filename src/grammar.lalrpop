@@ -208,7 +208,7 @@ Type: Type = {
 
     "(" ")" "=>" <t:Type>
         => Type::Function(FunctionType { param_types: vec![], return_type: Box::new(t) }),
-    "(" (<first:Type>) ("," <rest:Type>)* ")" "=>" <ret:Type> 
+    "(" <first:Type> <rest:("," <Type>)*> ")" "=>" <ret:Type> 
         => {
         let mut param_types = vec![first];
         param_types.extend(rest);
