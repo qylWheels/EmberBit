@@ -147,9 +147,6 @@ impl Interpreter {
             ast::Expression::Address(e) => Ok(Value::Pointer(Pointer {
                 pointee: Box::new(self.interpret_expression(e.expr.as_ref(), env)?),
             })),
-            ast::Expression::AddressVariable(e) => Ok(Value::VariablePointer(VariablePointer {
-                pointee: Box::new(self.interpret_expression(e.expr.as_ref(), env)?),
-            })),
             ast::Expression::Array(e) => {
                 let elements = e
                     .elements
