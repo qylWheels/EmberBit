@@ -20,7 +20,8 @@ type TrivialType = ast::TrivialType;
 type PointerType = ast::PointerType;
 type VariablePointerType = ast::VariablePointerType;
 type ArrayType = ast::ArrayType;
-type SliceType = ast::SliceType;
+type ConstSliceType = ast::ConstSliceType;
+type VarSliceType = ast::VarSliceType;
 type TupleType = ast::TupleType;
 type FunctionType = ast::FunctionType;
 
@@ -273,7 +274,7 @@ impl SemanticChecker {
                 let base_type = self.check_expression(base, ctx)?;
                 let elem_type = match base_type {
                     Type::Array(ast::ArrayType { elem_type, .. }) => *elem_type,
-                    Type::Slice(ast::SliceType { elem_type, .. }) => *elem_type,
+                    Type::ConstSlice(ast::ConstSliceType { elem_type, .. }) => *elem_type,
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
                             "Base expression must be of type Array or Slice, but {:?} is given",
@@ -292,7 +293,7 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, elem_type.clone());
                 Ok(elem_type)
             }
-            ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
+            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let start_type = self.check_expression(start, ctx)?;
                 let end_type = self.check_expression(end, ctx)?;
@@ -319,7 +320,7 @@ impl SemanticChecker {
                         end_type
                     )));
                 }
-                let ty = Type::Slice(ast::SliceType {
+                let ty = Type::ConstSlice(ast::ConstSliceType {
                     elem_type: Box::new(elem_type),
                 });
                 self.type_of_node.insert(key, ty.clone());
