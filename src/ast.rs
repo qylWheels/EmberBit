@@ -141,7 +141,7 @@ pub struct Identifier {
     pub name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub enum Type {
     Trivial(TrivialType),
     Pointer(PointerType),
@@ -152,38 +152,38 @@ pub enum Type {
     Function(FunctionType),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct TrivialType {
     pub name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct PointerType {
     pub pointee_type: Box<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct VariablePointerType {
     pub pointee_type: Box<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct ArrayType {
     pub size: i64,
     pub elem_type: Box<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct SliceType {
     pub elem_type: Box<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct TupleType {
     pub elem_types: Vec<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct FunctionType {
     pub param_types: Vec<Type>,
     pub return_type: Box<Type>,
