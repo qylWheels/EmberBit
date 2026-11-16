@@ -150,8 +150,15 @@ MulDivExpression: Expression = {
 };
 
 SliceExpression: Expression = {
-    <base:IndexExpression> "[" <start:Expression> ".." <end:Expression> "]"
-        => Expression::Slice(SliceExpression {
+    <base:IndexExpression> "[" "const" <start:Expression> ".." <end:Expression> "]"
+        => Expression::ConstSlice(ConstSliceExpression {
+            base: Box::new(base),
+            start: Box::new(start),
+            end: Box::new(end),
+        }),
+    
+    <base:IndexExpression> "[" "var" <start:Expression> ".." <end:Expression> "]"
+        => Expression::VarSlice(VarSliceExpression {
             base: Box::new(base),
             start: Box::new(start),
             end: Box::new(end),
@@ -192,8 +199,11 @@ Type: Type = {
     "[" <size:INTEGER> "]" <t:Type>
         => Type::Array(ArrayType { size, elem_type: Box::new(t) }),
 
-    "[" "]" <t:Type>
-        => Type::Slice(SliceType { elem_type: Box::new(t) }),
+    "[" "]" "const" <t:Type>
+        => Type::ConstSlice(SliceType { elem_type: Box::new(t) }),
+
+    "[" "]" "var" <t:Type>
+        => Type::VarSlice(SliceType { elem_type: Box::new(t) }),
 
     "(" ")" => Type::Tuple(TupleType { elem_types: vec![] }),
 
