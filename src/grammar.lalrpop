@@ -74,7 +74,6 @@ Statement: Statement = {
 
 Expression: Expression = {
     AddressExpression,
-    AddressVariableExpression,
     ArrayExpression,
     TupleExpression,
     AddSubExpression,
@@ -83,11 +82,6 @@ Expression: Expression = {
 AddressExpression: Expression = {
     "&" <expr:Expression>
         => Expression::Address(AddressExpression { expr: Box::new(expr) }),
-};
-
-AddressVariableExpression: Expression = {
-    "&" "var" <expr:Expression>
-        => Expression::AddressVariable(AddressVariableExpression { expr: Box::new(expr) }),
 };
 
 ArrayExpression: Expression = {
@@ -185,9 +179,6 @@ Type: Type = {
 
     "*" <t:Type>
         => Type::Pointer(PointerType { pointee_type: Box::new(t) }),
-
-    "*" "var" <t:Type>
-        => Type::VariablePointer(VariablePointerType { pointee_type: Box::new(t) }),
 
     "[" <size:INTEGER> "]" <t:Type>
         => Type::Array(ArrayType { size, elem_type: Box::new(t) }),
