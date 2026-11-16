@@ -205,4 +205,16 @@ Type: Type = {
         elem_types.extend(rest);
         Type::Tuple(TupleType { elem_types })
     },
+
+    "(" ")" "=>" <t:Type>
+        => Type::Function(FunctionType { param_types: vec![], return_type: Box::new(t) }),
+    "(" (<first:Type>) ("," <rest:Type>)* ")" "=>" <ret:Type> 
+        => {
+        let mut param_types = vec![first];
+        param_types.extend(rest);
+        Type::Function(FunctionType {
+            param_types,
+            return_type: Box::new(ret),
+        })
+        },
 };
