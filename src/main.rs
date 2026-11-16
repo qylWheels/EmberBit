@@ -1,4 +1,5 @@
 mod ast;
+mod semantic;
 
 use lalrpop_util::lalrpop_mod;
 
@@ -21,4 +22,7 @@ fn main() {
 
     let module = grammar::ModuleParser::new().parse(src).unwrap();
     println!("{:#?}", module);
+    let mut checker = semantic::SemanticChecker::new();
+    let result = checker.check_module(&module);
+    println!("{:?}", result);
 }
