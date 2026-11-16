@@ -293,7 +293,8 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, elem_type.clone());
                 Ok(elem_type)
             }
-            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end }) => {
+            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end })
+            | ast::Expression::VarSlice(ast::VarSliceExpression { base, start, end }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let start_type = self.check_expression(start, ctx)?;
                 let end_type = self.check_expression(end, ctx)?;
@@ -320,9 +321,17 @@ impl SemanticChecker {
                         end_type
                     )));
                 }
-                let ty = Type::ConstSlice(ast::ConstSliceType {
-                    elem_type: Box::new(elem_type),
-                });
+                let ty = if matches!(ast, ast::Expression::ConstSlice(_)) {
+                    Type::ConstSlice(ast::ConstSliceType {
+                        elem_type: Box::new(elem_type),
+                    })
+                } else if matches!(ast, ast::Expression::VarSlice(_)) {
+                    Type::VarSlice(ast::VarSliceType {
+                        elem_type: Box::new(elem_type),
+                    })
+                } else {
+                    unreachable!("Unknown slice type");
+                };
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
