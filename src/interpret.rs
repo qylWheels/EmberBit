@@ -19,7 +19,14 @@ pub struct Array {
 }
 
 #[derive(Debug, Clone)]
-pub struct Slice {
+pub struct ConstSlice {
+    pub array: Box<Array>,
+    pub start: usize,
+    pub end: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct VarSlice {
     pub array: Box<Array>,
     pub start: usize,
     pub end: usize,
@@ -36,7 +43,8 @@ pub enum Value {
     Pointer(Pointer),
     VariablePointer(VariablePointer),
     Array(Array),
-    Slice(Slice),
+    ConstSlice(ConstSlice),
+    VarSlice(VarSlice),
     Tuple(Tuple),
 }
 
@@ -186,27 +194,36 @@ impl Interpreter {
                 };
                 Ok(Value::Int(v))
             }
-            ast::Expression::Slice(e) => {
-                let array = self.interpret_expression(e.base.as_ref(), env)?;
+            ast::Expression::ConstSlice(ast::ConstSliceExpression { base, start, end })
+            | ast::Expression::VarSlice(ast::VarSliceExpression { base, start, end }) => {
+                let array = self.interpret_expression(base.as_ref(), env)?;
                 let array = match array {
                     Value::Array(a) => a,
-                    _ => return Err(InterpretError::TypeMismatch("slice base must be Array")),
+                    _ => unreachable!(),
                 };
-                let start = self.interpret_expression(e.start.as_ref(), env)?;
-                let end = self.interpret_expression(e.end.as_ref(), env)?;
+                let start = self.interpret_expression(start.as_ref(), env)?;
+                let end = self.interpret_expression(end.as_ref(), env)?;
                 let start = match start {
                     Value::Int(n) if n >= 0 => n as usize,
-                    _ => return Err(InterpretError::TypeMismatch("slice start must be int")),
+                    _ => unreachable!(),
                 };
                 let end = match end {
                     Value::Int(n) if n >= 0 => n as usize,
-                    _ => return Err(InterpretError::TypeMismatch("slice end must be int")),
+                    _ => unreachable!(),
                 };
-                Ok(Value::Slice(Slice {
-                    array: Box::new(array),
-                    start,
-                    end,
-                }))
+                if matches!(expr, ast::Expression::ConstSlice(_)) {
+                    Ok(Value::ConstSlice(ConstSlice {
+                        array: Box::new(array),
+                        start,
+                        end,
+                    }))
+                } else {
+                    Ok(Value::ConstSlice(ConstSlice {
+                        array: Box::new(array),
+                        start,
+                        end,
+                    }))
+                }
             }
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
