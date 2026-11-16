@@ -234,6 +234,9 @@ impl Interpreter {
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
                 match base {
                     Value::Array(a) => Ok(a.elements[index].clone()),
+                    Value::ConstSlice(slice) => {
+                        Ok(slice.array.elements[slice.start + index].clone())
+                    }
                     Value::VarSlice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
                     _ => unreachable!(),
                 }
