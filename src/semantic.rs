@@ -18,7 +18,6 @@ pub type Result<T> = std::result::Result<T, SemanticError>;
 type Type = ast::Type;
 type TrivialType = ast::TrivialType;
 type PointerType = ast::PointerType;
-type VariablePointerType = ast::VariablePointerType;
 type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type VarSliceType = ast::VarSliceType;
@@ -250,14 +249,6 @@ impl SemanticChecker {
             ast::Expression::Address(ast::AddressExpression { expr }) => {
                 let pointee_type = self.check_expression(expr, ctx)?;
                 let ty = Type::Pointer(ast::PointerType {
-                    pointee_type: Box::new(pointee_type),
-                });
-                self.type_of_node.insert(key, ty.clone());
-                Ok(ty)
-            }
-            ast::Expression::AddressVariable(ast::AddressVariableExpression { expr }) => {
-                let pointee_type = self.check_expression(expr, ctx)?;
-                let ty = Type::VariablePointer(ast::VariablePointerType {
                     pointee_type: Box::new(pointee_type),
                 });
                 self.type_of_node.insert(key, ty.clone());
