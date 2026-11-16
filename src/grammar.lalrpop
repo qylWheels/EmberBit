@@ -150,15 +150,8 @@ MulDivExpression: Expression = {
 };
 
 SliceExpression: Expression = {
-    <base:IndexExpression> "[" "const" <start:Expression> ".." <end:Expression> "]"
-        => Expression::ConstSlice(ConstSliceExpression {
-            base: Box::new(base),
-            start: Box::new(start),
-            end: Box::new(end),
-        }),
-    
-    <base:IndexExpression> "[" "var" <start:Expression> ".." <end:Expression> "]"
-        => Expression::VarSlice(VarSliceExpression {
+    <base:IndexExpression> "[" <start:Expression> ".." <end:Expression> "]"
+        => Expression::Slice(SliceExpression {
             base: Box::new(base),
             start: Box::new(start),
             end: Box::new(end),
