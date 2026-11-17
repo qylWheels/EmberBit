@@ -145,7 +145,7 @@ impl Interpreter {
             ast::Statement::Assignment(s) => {
                 let value = self.interpret_expression(&s.rhs, &newenv)?;
                 let reference = self.interpret_lvalue_expression(&s.lhs, &mut newenv)?;
-                *reference = value;
+                unsafe { *reference = value };
             }
             ast::Statement::Return(_) => {
                 return Err(InterpretError::ReturnOutsideFunction);
