@@ -19,7 +19,6 @@ type Type = ast::Type;
 type TrivialType = ast::TrivialType;
 type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
-type VarSliceType = ast::VarSliceType;
 type TupleType = ast::TupleType;
 type FunctionType = ast::FunctionType;
 
