@@ -73,15 +73,9 @@ Statement: Statement = {
 };
 
 Expression: Expression = {
-    AddressExpression,
     ArrayExpression,
     TupleExpression,
     AddSubExpression,
-};
-
-AddressExpression: Expression = {
-    "&" <expr:Expression>
-        => Expression::Address(AddressExpression { expr: Box::new(expr) }),
 };
 
 ArrayExpression: Expression = {
@@ -176,9 +170,6 @@ AtomExpression: Expression = {
 
 Type: Type = {
     <name:CNAME> => Type::Trivial(TrivialType { name }),
-
-    "*" <t:Type>
-        => Type::Pointer(PointerType { pointee_type: Box::new(t) }),
 
     "[" <size:INTEGER> "]" <t:Type>
         => Type::Array(ArrayType { size, elem_type: Box::new(t) }),
