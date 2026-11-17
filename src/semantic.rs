@@ -157,6 +157,9 @@ impl SemanticChecker {
                     ast::Expression::Index(ast::IndexExpression { base, index: _ }) => {
                         self.check_expression_assignable(base, ctx)?
                     }
+                    ast::Expression::Identifier(_) => {
+                        self.check_expression_assignable(expr, ctx)?
+                    }
                     _ => true,
                 };
                 if !expr_assignable {
