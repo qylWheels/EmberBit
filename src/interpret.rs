@@ -233,12 +233,12 @@ impl Interpreter {
             }
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
-                let index = match index {
+                let index = match *index.0.borrow() {
                     Value::Int(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
-                match base {
+                match *base.0.borrow() {
                     Value::Array(a) => Ok(a.elements[index].clone()),
                     Value::Slice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
                     _ => unreachable!(),
