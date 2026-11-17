@@ -3,16 +3,6 @@ use std::collections::HashMap;
 use crate::ast;
 
 #[derive(Debug, Clone)]
-pub struct Pointer {
-    pub pointee: Box<Value>,
-}
-
-#[derive(Debug, Clone)]
-pub struct VariablePointer {
-    pub pointee: Box<Value>,
-}
-
-#[derive(Debug, Clone)]
 pub struct Array {
     pub elements: Vec<Value>,
     pub length: usize,
@@ -33,8 +23,6 @@ pub struct Tuple {
 #[derive(Debug, Clone)]
 pub enum Value {
     Int(i64),
-    Pointer(Pointer),
-    VariablePointer(VariablePointer),
     Array(Array),
     Slice(Slice),
     Tuple(Tuple),
