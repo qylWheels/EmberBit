@@ -15,7 +15,7 @@ pub struct Array {
 
 #[derive(Debug, Clone)]
 pub struct Slice {
-    pub array: Box<Array>,
+    pub array: Box<InnerMutableValueRef>,
     pub start: usize,
     pub end: usize,
 }
