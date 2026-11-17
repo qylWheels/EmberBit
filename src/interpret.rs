@@ -191,21 +191,23 @@ impl Interpreter {
             ast::Expression::Binary(e) => {
                 let lhs = self.interpret_expression(e.lhs.as_ref(), env)?;
                 let rhs = self.interpret_expression(e.rhs.as_ref(), env)?;
-                let lhs_int = match lhs {
+                let lhs_int = match *lhs.0.borrow() {
                     Value::Int(n) => n,
                     _ => return Err(InterpretError::TypeMismatch("binary lhs must be int")),
                 };
-                let rhs_int = match rhs {
+                let rhs_int = match *rhs.0.borrow() {
                     Value::Int(n) => n,
                     _ => return Err(InterpretError::TypeMismatch("binary rhs must be int")),
                 };
-                let v = match e.op {
+                let result = match e.op {
                     ast::BinaryOp::Add => lhs_int + rhs_int,
                     ast::BinaryOp::Sub => lhs_int - rhs_int,
                     ast::BinaryOp::Mul => lhs_int * rhs_int,
                     ast::BinaryOp::Div => lhs_int / rhs_int,
                 };
-                Ok(Value::Int(v))
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Int(result))));
+                self.values.insert(value.clone());
+                Ok(value)
             }
             ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
                 let array = self.interpret_expression(base.as_ref(), env)?;
