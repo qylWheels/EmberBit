@@ -120,9 +120,11 @@ impl Interpreter {
             }
             newenv = self.interpret_statement(stmt, &newenv)?;
         }
-        let value = InnerMutableValueRef(RefCell::new(Value::Tuple(Tuple { elements: vec![] })));
-        self.values.insert(value);
-        Ok(self.values.get(&value).unwrap())
+        let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Tuple(Tuple {
+            elements: vec![],
+        }))));
+        self.values.insert(value.clone());
+        Ok(value)
     }
 
     pub fn interpret_statement(
