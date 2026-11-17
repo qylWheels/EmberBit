@@ -9,7 +9,7 @@ use crate::ast;
 
 #[derive(Debug, Clone)]
 pub struct Array {
-    pub elements: Vec<Value>,
+    pub elements: Vec<InnerMutableValueRef>,
     pub length: usize,
 }
 
@@ -22,7 +22,7 @@ pub struct Slice {
 
 #[derive(Debug, Clone)]
 pub struct Tuple {
-    pub elements: Vec<Value>,
+    pub elements: Vec<InnerMutableValueRef>,
 }
 
 #[derive(Debug, Clone)]
