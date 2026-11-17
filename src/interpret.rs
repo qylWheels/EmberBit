@@ -170,7 +170,12 @@ impl Interpreter {
                     .map(|x| self.interpret_expression(x, env))
                     .collect::<InterpretResult<Vec<_>>>()?;
                 let length = elements.len();
-                Ok(Value::Array(Array { elements, length }))
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Array(Array {
+                    elements,
+                    length,
+                }))));
+                self.values.insert(value.clone());
+                Ok(value)
             }
             ast::Expression::Tuple(e) => {
                 let elements = e
