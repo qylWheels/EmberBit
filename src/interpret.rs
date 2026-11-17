@@ -211,25 +211,23 @@ impl Interpreter {
             }
             ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
                 let array = self.interpret_expression(base.as_ref(), env)?;
-                let array = match array {
-                    Value::Array(a) => a,
-                    _ => unreachable!(),
-                };
                 let start = self.interpret_expression(start.as_ref(), env)?;
                 let end = self.interpret_expression(end.as_ref(), env)?;
-                let start = match start {
+                let start = match *start.0.borrow() {
                     Value::Int(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
-                let end = match end {
+                let end = match *end.0.borrow() {
                     Value::Int(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
-                Ok(Value::Slice(Slice {
-                    array: Box::new(array),
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Slice(Slice {
+                    array,
                     start,
                     end,
-                }))
+                }))));
+                self.values.insert(value.clone());
+                Ok(value)
             }
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
