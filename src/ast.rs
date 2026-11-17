@@ -155,11 +155,6 @@ pub struct SliceType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VarSliceType {
-    pub elem_type: Box<Type>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TupleType {
     pub elem_types: Vec<Type>,
 }
