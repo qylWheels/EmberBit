@@ -82,10 +82,7 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret_module(
-        &mut self,
-        module: &ast::Module,
-    ) -> InterpretResult<&InnerMutableValue> {
+    pub fn interpret_module(&mut self, module: &ast::Module) -> InterpretResult<InnerMutableValue> {
         for topdef in &module.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_) => {}
@@ -109,10 +106,10 @@ impl Interpreter {
     }
 
     pub fn interpret_function(
-        &self,
+        &mut self,
         func: &ast::FunctionDefinition,
-        env: &HashMap<String, &InnerMutableValue>,
-    ) -> InterpretResult<&InnerMutableValue> {
+        env: &HashMap<String, InnerMutableValue>,
+    ) -> InterpretResult<InnerMutableValue> {
         let mut newenv = env.clone();
         for stmt in &func.body {
             if let ast::Statement::Return(ast::ReturnStatement { expr }) = stmt {
@@ -120,16 +117,16 @@ impl Interpreter {
             }
             newenv = self.interpret_statement(stmt, &newenv)?;
         }
-        let value = RefCell::new(Value::Tuple(Tuple { elements: vec![] }));
-        self.values.insert(value.clone());
-        Ok(&value)
+        let value = InnerMutableValue(RefCell::new(Value::Tuple(Tuple { elements: vec![] })));
+        self.values.insert(value);
+        Ok(self.values.get(&value).unwrap())
     }
 
     pub fn interpret_statement(
         &self,
         stmt: &ast::Statement,
-        env: &HashMap<String, &InnerMutableValue>,
-    ) -> InterpretResult<HashMap<String, &InnerMutableValue>> {
+        env: &HashMap<String, InnerMutableValue>,
+    ) -> InterpretResult<HashMap<String, InnerMutableValue>> {
         let mut newenv = env.clone();
         match stmt {
             ast::Statement::ConstDef(s) => {
@@ -158,8 +155,8 @@ impl Interpreter {
     pub fn interpret_expression(
         &self,
         expr: &ast::Expression,
-        env: &HashMap<String, &InnerMutableValue>,
-    ) -> InterpretResult<&InnerMutableValue> {
+        env: &HashMap<String, InnerMutableValue>,
+    ) -> InterpretResult<InnerMutableValue> {
         match expr {
             ast::Expression::Array(e) => {
                 let elements = e
@@ -243,8 +240,8 @@ impl Interpreter {
     pub fn interpret_lvalue_expression<'a>(
         &self,
         lval_expr: &ast::Expression,
-        env: &'a mut HashMap<String, &InnerMutableValue>,
-    ) -> InterpretResult<&InnerMutableValue> {
+        env: &'a mut HashMap<String, InnerMutableValue>,
+    ) -> InterpretResult<InnerMutableValue> {
         let env_copy = env.clone();
         match lval_expr {
             ast::Expression::Identifier(e) => env
