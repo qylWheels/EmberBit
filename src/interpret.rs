@@ -236,9 +236,15 @@ impl Interpreter {
                     _ => unreachable!(),
                 };
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
-                match *base.0.borrow() {
+                match &*base.0.borrow() {
                     Value::Array(a) => Ok(a.elements[index].clone()),
-                    Value::Slice(slice) => Ok(slice.array.elements[slice.start + index].clone()),
+                    Value::Slice(slice) => {
+                        let array = &slice.array;
+                        match &*array.0.borrow() {
+                            Value::Array(a) => Ok(a.elements[slice.start + index].clone()),
+                            _ => unreachable!(),
+                        }
+                    }
                     _ => unreachable!(),
                 }
             }
