@@ -183,7 +183,10 @@ impl Interpreter {
                     .iter()
                     .map(|x| self.interpret_expression(x, env))
                     .collect::<InterpretResult<Vec<_>>>()?;
-                Ok(Value::Tuple(Tuple { elements }))
+                let value =
+                    InnerMutableValueRef(Rc::new(RefCell::new(Value::Tuple(Tuple { elements }))));
+                self.values.insert(value.clone());
+                Ok(value)
             }
             ast::Expression::Binary(e) => {
                 let lhs = self.interpret_expression(e.lhs.as_ref(), env)?;
