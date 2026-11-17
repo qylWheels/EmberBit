@@ -245,7 +245,11 @@ impl Interpreter {
                 }
             }
             ast::Expression::Identifier(e) => Ok(env.get(&e.name).cloned().unwrap()),
-            ast::Expression::Integer(e) => Ok(Value::Int(e.value)),
+            ast::Expression::Integer(e) => {
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Int(e.value))));
+                self.values.insert(value.clone());
+                Ok(value)
+            }
         }
     }
 
