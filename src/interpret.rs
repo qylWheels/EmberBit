@@ -258,37 +258,39 @@ impl Interpreter {
     }
 
     pub fn interpret_lvalue_expression<'a>(
-        &self,
+        &mut self,
         lval_expr: &ast::Expression,
         env: &'a mut HashMap<String, InnerMutableValueRef>,
-    ) -> InterpretResult<InnerMutableValueRef> {
+    ) -> InterpretResult<*mut InnerMutableValueRef> {
         let env_copy = env.clone();
         match lval_expr {
-            ast::Expression::Identifier(e) => env
-                .get_mut(&e.name)
-                .ok_or(InterpretError::TypeMismatch("unbound identifier")),
+            ast::Expression::Identifier(e) => {
+                Ok(env.get_mut(&e.name).unwrap() as *mut InnerMutableValueRef)
+            }
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), &env_copy)?;
-                let index = match index {
+                let index = match *index.0.borrow() {
                     Value::Int(n) if n >= 0 => n as usize,
-                    _ => return Err(InterpretError::TypeMismatch("lvalue index must be int")),
+                    _ => unreachable!(),
                 };
                 let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
-                match base {
-                    Value::Array(arr) => return Ok(&mut arr.elements[index]),
-                    Value::Slice(slice) => {
-                        return Ok(&mut slice.array.elements[slice.start + index]);
+                let base = unsafe { base.as_mut().unwrap() };
+                match &mut *base.0.borrow_mut() {
+                    Value::Array(arr) => {
+                        return Ok(&mut arr.elements[index] as *mut InnerMutableValueRef);
                     }
-                    _ => {
-                        return Err(InterpretError::TypeMismatch(
-                            "lvalue index base must be Array or VarSlice",
-                        ));
-                    }
+                    Value::Slice(slice) => match &mut *slice.array.0.borrow_mut() {
+                        Value::Array(arr) => {
+                            return Ok(
+                                &mut arr.elements[slice.start + index] as *mut InnerMutableValueRef
+                            );
+                        }
+                        _ => unreachable!(),
+                    },
+                    _ => unreachable!(),
                 };
             }
-            _ => Err(InterpretError::UnknownExpression(
-                "unknown lvalue expression",
-            )),
+            _ => unreachable!(),
         }
     }
 }
