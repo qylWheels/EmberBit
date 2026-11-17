@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+};
 
 use crate::ast;
 
@@ -42,6 +45,7 @@ pub type InterpretResult<T> = Result<T, InterpretError>;
 pub struct Interpreter {
     pub struct_defs: HashMap<String, ast::StructDefinition>,
     pub function_defs: HashMap<String, ast::FunctionDefinition>,
+    pub values: HashSet<RefCell<Value>>,
 }
 
 impl Default for Interpreter {
@@ -55,6 +59,7 @@ impl Interpreter {
         Self {
             struct_defs: HashMap::new(),
             function_defs: HashMap::new(),
+            values: HashSet::new(),
         }
     }
 
