@@ -128,7 +128,7 @@ impl Interpreter {
     }
 
     pub fn interpret_statement(
-        &self,
+        &mut self,
         stmt: &ast::Statement,
         env: &HashMap<String, InnerMutableValueRef>,
     ) -> InterpretResult<HashMap<String, InnerMutableValueRef>> {
