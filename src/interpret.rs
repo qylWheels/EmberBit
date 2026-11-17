@@ -63,7 +63,7 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret_module(&mut self, module: &ast::Module) -> InterpretResult<RefCell<Value>> {
+    pub fn interpret_module(&mut self, module: &ast::Module) -> InterpretResult<&RefCell<Value>> {
         for topdef in &module.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_) => {}
@@ -89,8 +89,8 @@ impl Interpreter {
     pub fn interpret_function(
         &self,
         func: &ast::FunctionDefinition,
-        env: &HashMap<String, Value>,
-    ) -> InterpretResult<RefCell<Value>> {
+        env: &HashMap<String, &RefCell<Value>>,
+    ) -> InterpretResult<&RefCell<Value>> {
         let mut newenv = env.clone();
         for stmt in &func.body {
             if let ast::Statement::Return(ast::ReturnStatement { expr }) = stmt {
@@ -104,8 +104,8 @@ impl Interpreter {
     pub fn interpret_statement(
         &self,
         stmt: &ast::Statement,
-        env: &HashMap<String, Value>,
-    ) -> InterpretResult<HashMap<String, RefCell<Value>>> {
+        env: &HashMap<String, &RefCell<Value>>,
+    ) -> InterpretResult<HashMap<String, &RefCell<Value>>> {
         let mut newenv = env.clone();
         match stmt {
             ast::Statement::ConstDef(s) => {
@@ -134,8 +134,8 @@ impl Interpreter {
     pub fn interpret_expression(
         &self,
         expr: &ast::Expression,
-        env: &HashMap<String, Value>,
-    ) -> InterpretResult<RefCell<Value>> {
+        env: &HashMap<String, &RefCell<Value>>,
+    ) -> InterpretResult<&RefCell<Value>> {
         match expr {
             ast::Expression::Array(e) => {
                 let elements = e
@@ -219,8 +219,8 @@ impl Interpreter {
     pub fn interpret_lvalue_expression<'a>(
         &self,
         lval_expr: &ast::Expression,
-        env: &'a mut HashMap<String, RefCell<Value>>,
-    ) -> InterpretResult<RefCell<Value>> {
+        env: &'a mut HashMap<String, &RefCell<Value>>,
+    ) -> InterpretResult<&RefCell<Value>> {
         let env_copy = env.clone();
         match lval_expr {
             ast::Expression::Identifier(e) => env
