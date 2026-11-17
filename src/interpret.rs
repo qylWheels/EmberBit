@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
+    hash::Hash,
 };
 
 use crate::ast;
@@ -29,6 +30,15 @@ pub enum Value {
     Array(Array),
     Slice(Slice),
     Tuple(Tuple),
+}
+
+#[derive(Debug, Clone)]
+pub struct InnerMutableValue(RefCell<Value>);
+
+impl Hash for InnerMutableValue {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        (self.0.as_ptr() as usize).hash(state);
+    }
 }
 
 #[derive(Debug)]
