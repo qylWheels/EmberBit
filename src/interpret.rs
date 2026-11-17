@@ -63,7 +63,7 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret_module(&mut self, module: &ast::Module) -> InterpretResult<Value> {
+    pub fn interpret_module(&mut self, module: &ast::Module) -> InterpretResult<RefCell<Value>> {
         for topdef in &module.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_) => {}
@@ -90,7 +90,7 @@ impl Interpreter {
         &self,
         func: &ast::FunctionDefinition,
         env: &HashMap<String, Value>,
-    ) -> InterpretResult<Value> {
+    ) -> InterpretResult<RefCell<Value>> {
         let mut newenv = env.clone();
         for stmt in &func.body {
             if let ast::Statement::Return(ast::ReturnStatement { expr }) = stmt {
@@ -105,7 +105,7 @@ impl Interpreter {
         &self,
         stmt: &ast::Statement,
         env: &HashMap<String, Value>,
-    ) -> InterpretResult<HashMap<String, Value>> {
+    ) -> InterpretResult<HashMap<String, RefCell<Value>>> {
         let mut newenv = env.clone();
         match stmt {
             ast::Statement::ConstDef(s) => {
@@ -135,11 +135,8 @@ impl Interpreter {
         &self,
         expr: &ast::Expression,
         env: &HashMap<String, Value>,
-    ) -> InterpretResult<Value> {
+    ) -> InterpretResult<RefCell<Value>> {
         match expr {
-            ast::Expression::Address(e) => Ok(Value::Pointer(Pointer {
-                pointee: Box::new(self.interpret_expression(e.expr.as_ref(), env)?),
-            })),
             ast::Expression::Array(e) => {
                 let elements = e
                     .elements
@@ -222,8 +219,8 @@ impl Interpreter {
     pub fn interpret_lvalue_expression<'a>(
         &self,
         lval_expr: &ast::Expression,
-        env: &'a mut HashMap<String, Value>,
-    ) -> InterpretResult<&'a mut Value> {
+        env: &'a mut HashMap<String, RefCell<Value>>,
+    ) -> InterpretResult<RefCell<Value>> {
         let env_copy = env.clone();
         match lval_expr {
             ast::Expression::Identifier(e) => env
