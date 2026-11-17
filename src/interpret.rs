@@ -41,6 +41,14 @@ impl Hash for InnerMutableValue {
     }
 }
 
+impl PartialEq for InnerMutableValue {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.as_ptr() == other.0.as_ptr()
+    }
+}
+
+impl Eq for InnerMutableValue {}
+
 #[derive(Debug)]
 pub enum InterpretError {
     MissingMain,
