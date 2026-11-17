@@ -244,10 +244,7 @@ impl Interpreter {
                     _ => unreachable!(),
                 }
             }
-            ast::Expression::Identifier(e) => env
-                .get(&e.name)
-                .cloned()
-                .ok_or(InterpretError::TypeMismatch("unbound identifier")),
+            ast::Expression::Identifier(e) => Ok(env.get(&e.name).cloned().unwrap()),
             ast::Expression::Integer(e) => Ok(Value::Int(e.value)),
         }
     }
