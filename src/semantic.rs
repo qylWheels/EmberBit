@@ -158,7 +158,7 @@ impl SemanticChecker {
                 };
                 if !expr_assignable {
                     return Err(SemanticError::Variable(
-                        "Variable statement has non-assignable expression".into(),
+                        "Variable reference on non-assignable expression".into(),
                     ));
                 }
 
