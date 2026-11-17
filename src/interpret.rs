@@ -158,7 +158,7 @@ impl Interpreter {
     }
 
     pub fn interpret_expression(
-        &self,
+        &mut self,
         expr: &ast::Expression,
         env: &HashMap<String, InnerMutableValueRef>,
     ) -> InterpretResult<InnerMutableValueRef> {
