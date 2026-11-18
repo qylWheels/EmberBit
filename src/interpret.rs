@@ -27,7 +27,7 @@ pub struct Tuple {
 
 #[derive(Debug, Clone)]
 pub struct Function {
-    pub code: *const ast::FunctionDefinition,
+    pub ast: *const ast::FunctionDefinition,
 }
 
 #[derive(Debug, Clone)]
@@ -260,7 +260,30 @@ impl Interpreter {
                 self.values.insert(value.clone());
                 Ok(value)
             }
-            ast::Expression::Call(e) => todo!(),
+            ast::Expression::Call(e) => {
+                let callee = self.interpret_expression(e.callee.as_ref(), env)?;
+                let args = e
+                    .args
+                    .iter()
+                    .map(|x| self.interpret_expression(x, env))
+                    .collect::<InterpretResult<Vec<_>>>()?;
+                match &*callee.0.borrow() {
+                    Value::Function(func) => {
+                        let func_ast = unsafe { func.ast.as_ref().unwrap() };
+                        let arg_names = func_ast
+                            .params
+                            .iter()
+                            .map(|x| x.0.clone())
+                            .collect::<Vec<_>>();
+                        let mut newenv = env.clone();
+                        for (name, arg) in arg_names.iter().zip(args) {
+                            newenv.insert(name.clone(), arg.clone());
+                        }
+                        self.interpret_function(func_ast, &newenv)
+                    }
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 
