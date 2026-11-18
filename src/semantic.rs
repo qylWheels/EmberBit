@@ -89,7 +89,7 @@ impl SemanticChecker {
                 ast::TopDefinition::Import(i) => self.check_import(i)?,
                 ast::TopDefinition::Struct(s) => self.check_struct(s)?,
                 ast::TopDefinition::Function(f) => {
-                    self.check_function(f, &HashMap::new())?;
+                    self.check_function(f, &ctx)?;
                 }
             }
         }
