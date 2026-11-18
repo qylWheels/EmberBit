@@ -80,13 +80,25 @@ impl SemanticChecker {
         ast: &ast::FunctionDefinition,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<ast::FunctionType> {
-        let param_types: Vec<Type> = ast
+        let mut curr_ctx = ctx.clone();
+        let annotated_param_types: Vec<Type> = ast
             .params
             .iter()
             .map(|(_name, ty)| self.type_annotation_to_type(ty))
             .collect::<Result<Vec<_>>>()?;
+        let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
+        let func_type = Type::Function(FunctionType {
+            param_types: annotated_param_types,
+            return_type: Box::new(annotated_return_type),
+        });
+        curr_ctx.insert(
+            ast.name.clone(),
+            IdentifierProperties {
+                ty: func_type.clone(),
+                variable: false,
+            },
+        );
 
-        let mut curr_ctx = ctx.clone();
         for stmt in &ast.body {
             curr_ctx = self.check_statement(stmt, &curr_ctx)?;
         }
@@ -111,7 +123,7 @@ impl SemanticChecker {
         }
 
         let ty = FunctionType {
-            param_types,
+            param_types: annotated_param_types,
             return_type: Box::new(return_type),
         };
         self.type_of_node.insert(
