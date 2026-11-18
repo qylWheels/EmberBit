@@ -26,11 +26,17 @@ pub struct Tuple {
 }
 
 #[derive(Debug, Clone)]
+pub struct Function {
+    pub code: *const ast::FunctionDefinition,
+}
+
+#[derive(Debug, Clone)]
 pub enum Value {
     Int(i64),
     Array(Array),
     Slice(Slice),
     Tuple(Tuple),
+    Function(Function),
 }
 
 #[derive(Debug, Clone)]
