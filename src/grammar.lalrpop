@@ -123,17 +123,6 @@ MulDivExpression: Expression = {
             rhs: Box::new(r),
         }),
 
-    SliceExpression,
-};
-
-SliceExpression: Expression = {
-    <base:IndexExpression> "[" <start:Expression> ".." <end:Expression> "]"
-        => Expression::Slice(SliceExpression {
-            base: Box::new(base),
-            start: Box::new(start),
-            end: Box::new(end),
-        }),
-
     IndexExpression,
 };
 
@@ -169,6 +158,17 @@ CallExpression: Expression = {
 
 ParenExpression: Expression = {
     "(" <e:Expression> ")" => e,
+    SliceExpression,
+};
+
+SliceExpression: Expression = {
+    <base:ArrayExpression> "[" <start:Expression> ".." <end:Expression> "]"
+        => Expression::Slice(SliceExpression {
+            base: Box::new(base),
+            start: Box::new(start),
+            end: Box::new(end),
+        }),
+
     ArrayExpression,
 };
 
