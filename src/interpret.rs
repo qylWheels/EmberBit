@@ -111,13 +111,17 @@ impl Interpreter {
             }
         }
 
-        let main_def = self
-            .function_defs
+        let main_def = env
             .get("main")
             .cloned()
             .ok_or(InterpretError::MissingMain)?;
 
-        self.interpret_function(&main_def, &env)
+        match *main_def.0.borrow() {
+            Value::Function(Function { ast }) => {
+                return self.interpret_function(unsafe { ast.as_ref().unwrap() }, &env);
+            }
+            _ => return Err(InterpretError::MissingMain),
+        }
     }
 
     pub fn interpret_function(
