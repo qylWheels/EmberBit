@@ -73,19 +73,8 @@ Statement: Statement = {
 };
 
 Expression: Expression = {
-    ArrayExpression,
     TupleExpression,
     AddSubExpression,
-};
-
-ArrayExpression: Expression = {
-    "[" "]" => Expression::Array(ArrayExpression { elements: vec![] }),
-
-    "[" <first:Expression> <rest:("," <Expression>)*> "]" => {
-        let mut elements = vec![first];
-        elements.extend(rest);
-        Expression::Array(ArrayExpression { elements })
-    },
 };
 
 TupleExpression: Expression = {
@@ -180,6 +169,18 @@ CallExpression: Expression = {
 
 ParenExpression: Expression = {
     "(" <e:Expression> ")" => e,
+    ArrayExpression,
+};
+
+ArrayExpression: Expression = {
+    "[" "]" => Expression::Array(ArrayExpression { elements: vec![] }),
+
+    "[" <first:Expression> <rest:("," <Expression>)*> "]" => {
+        let mut elements = vec![first];
+        elements.extend(rest);
+        Expression::Array(ArrayExpression { elements })
+    },
+
     AtomExpression,
 };
 
