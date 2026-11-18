@@ -89,7 +89,7 @@ impl SemanticChecker {
         let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
         let func_type = Type::Function(FunctionType {
             param_types: annotated_param_types,
-            return_type: Box::new(annotated_return_type),
+            return_type: Box::new(annotated_return_type.clone()),
         });
         curr_ctx.insert(
             ast.name.clone(),
@@ -108,23 +108,23 @@ impl SemanticChecker {
             .last()
             .ok_or_else(|| SemanticError::IncompatibleType("Empty function body".into()))?;
 
-        let return_type = if let ast::Statement::Return(ast::ReturnStatement { expr }) = last_stmt {
-            self.check_expression(expr, &curr_ctx)?
-        } else {
-            Type::Tuple(ast::TupleType { elem_types: vec![] })
-        };
+        let actual_return_type =
+            if let ast::Statement::Return(ast::ReturnStatement { expr }) = last_stmt {
+                self.check_expression(expr, &curr_ctx)?
+            } else {
+                Type::Tuple(ast::TupleType { elem_types: vec![] })
+            };
 
-        let annotation = self.type_annotation_to_type(&ast.return_type)?;
-        if annotation != return_type {
+        if annotated_return_type != actual_return_type {
             return Err(SemanticError::IncompatibleType(format!(
                 "Function {} has incompatible return types {:?} (annotation) and {:?} (actual)",
-                ast.name, annotation, return_type
+                ast.name, annotated_return_type, actual_return_type
             )));
         }
 
         let ty = FunctionType {
             param_types: annotated_param_types,
-            return_type: Box::new(return_type),
+            return_type: Box::new(actual_return_type),
         };
         self.type_of_node.insert(
             ast as *const ast::FunctionDefinition as usize,
