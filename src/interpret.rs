@@ -92,6 +92,8 @@ impl Interpreter {
         &mut self,
         module: &ast::Module,
     ) -> InterpretResult<InnerMutableValueRef> {
+        let mut env = HashMap::new();
+
         for topdef in &module.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_) => {}
@@ -99,7 +101,12 @@ impl Interpreter {
                     self.struct_defs.insert(s.name.clone(), s.clone());
                 }
                 ast::TopDefinition::Function(f) => {
-                    self.function_defs.insert(f.name.clone(), f.clone());
+                    let value =
+                        InnerMutableValueRef(Rc::new(RefCell::new(Value::Function(Function {
+                            ast: f as *const ast::FunctionDefinition,
+                        }))));
+                    self.values.insert(value.clone());
+                    env.insert(f.name.clone(), value);
                 }
             }
         }
@@ -110,7 +117,6 @@ impl Interpreter {
             .cloned()
             .ok_or(InterpretError::MissingMain)?;
 
-        let env = HashMap::new();
         self.interpret_function(&main_def, &env)
     }
 
