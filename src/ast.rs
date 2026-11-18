@@ -77,6 +77,7 @@ pub enum Expression {
     Binary(BinaryExpression),
     Slice(SliceExpression),
     Index(IndexExpression),
+    Call(CallExpression),
     Integer(IntegerLiteral),
     Identifier(Identifier),
 }
@@ -117,6 +118,12 @@ pub struct SliceExpression {
 pub struct IndexExpression {
     pub base: Box<Expression>,
     pub index: Box<Expression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CallExpression {
+    pub callee: Box<Expression>,
+    pub args: Vec<Expression>,
 }
 
 #[derive(Debug, Clone)]
