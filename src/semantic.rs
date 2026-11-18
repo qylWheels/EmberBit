@@ -56,6 +56,34 @@ impl SemanticChecker {
     }
 
     pub fn check_module(&mut self, ast: &ast::Module) -> Result<()> {
+        // Collect all top definitions into context.
+        let mut ctx = HashMap::new();
+        for topdef in &ast.top_definitions {
+            match topdef {
+                ast::TopDefinition::Import(_i) => {}
+                ast::TopDefinition::Struct(_s) => {}
+                ast::TopDefinition::Function(f) => {
+                    let annotated_param_types: Vec<Type> = f
+                        .params
+                        .iter()
+                        .map(|(_name, ty)| self.type_annotation_to_type(ty))
+                        .collect::<Result<Vec<_>>>()?;
+                    let annotated_return_type = self.type_annotation_to_type(&f.return_type)?;
+                    let func_type = Type::Function(FunctionType {
+                        param_types: annotated_param_types.clone(),
+                        return_type: Box::new(annotated_return_type.clone()),
+                    });
+                    ctx.insert(
+                        f.name.clone(),
+                        IdentifierProperties {
+                            ty: func_type.clone(),
+                            variable: false,
+                        },
+                    );
+                }
+            }
+        }
+
         for topdef in &ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(i) => self.check_import(i)?,
