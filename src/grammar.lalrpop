@@ -159,19 +159,19 @@ IndexExpression: Expression = {
 };
 
 CallExpression: Expression = {
-    <e:Expression> "(" ")" => {
+    <e:CallExpression> "(" ")" => {
         Expression::Call(CallExpression {
             callee: Box::new(e),
-            args: Box::new(vec![]),
+            args: vec![],
         })
     },
 
-    <e:Expression> "(" <first:Expression> <rest:("," <Expression>)*> ","? ")" => {
+    <e:CallExpression> "(" <first:Expression> <rest:("," <Expression>)*> ","? ")" => {
         let mut args = vec![first];
         args.extend(rest);
         Expression::Call(CallExpression {
             callee: Box::new(e),
-            args: Box::new(args),
+            args,
         })
     },
 
