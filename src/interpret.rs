@@ -254,6 +254,7 @@ impl Interpreter {
                 self.values.insert(value.clone());
                 Ok(value)
             }
+            ast::Expression::Call(e) => todo!(),
         }
     }
 

@@ -368,6 +368,7 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
+            ast::Expression::Call(ast::CallExpression { callee, args }) => todo!(),
         }
     }
 }
