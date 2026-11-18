@@ -88,7 +88,7 @@ impl SemanticChecker {
             .collect::<Result<Vec<_>>>()?;
         let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
         let func_type = Type::Function(FunctionType {
-            param_types: annotated_param_types,
+            param_types: annotated_param_types.clone(),
             return_type: Box::new(annotated_return_type.clone()),
         });
         curr_ctx.insert(
