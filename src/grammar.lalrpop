@@ -109,14 +109,14 @@ AddSubExpression: Expression = {
 };
 
 MulDivExpression: Expression = {
-    <l:MulDivExpression> "*" <r:ParenExpression>
+    <l:MulDivExpression> "*" <r:IndexExpression>
         => Expression::Binary(BinaryExpression {
             lhs: Box::new(l),
             op: BinaryOp::Mul,
             rhs: Box::new(r),
         }),
 
-    <l:MulDivExpression> "/" <r:ParenExpression>
+    <l:MulDivExpression> "/" <r:IndexExpression>
         => Expression::Binary(BinaryExpression {
             lhs: Box::new(l),
             op: BinaryOp::Div,
