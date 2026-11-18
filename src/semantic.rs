@@ -82,6 +82,7 @@ impl SemanticChecker {
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<ast::FunctionType> {
         let mut curr_ctx = ctx.clone();
+
         let annotated_param_types: Vec<Type> = ast
             .params
             .iter()
@@ -92,6 +93,8 @@ impl SemanticChecker {
             param_types: annotated_param_types.clone(),
             return_type: Box::new(annotated_return_type.clone()),
         });
+
+        // Add function to context.
         curr_ctx.insert(
             ast.name.clone(),
             IdentifierProperties {
@@ -99,6 +102,23 @@ impl SemanticChecker {
                 variable: false,
             },
         );
+
+        // Add parameters to context.
+        let param_names = ast
+            .params
+            .iter()
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        for (name, ty) in param_names.iter().zip(&annotated_param_types) {
+            curr_ctx.insert(
+                name.clone(),
+                IdentifierProperties {
+                    ty: ty.clone(),
+                    // TODO: Check if parameter is a variable.
+                    variable: false,
+                },
+            );
+        }
 
         for stmt in &ast.body {
             curr_ctx = self.check_statement(stmt, &curr_ctx)?;
