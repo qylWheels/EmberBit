@@ -56,7 +56,7 @@ impl SemanticChecker {
     }
 
     pub fn check_module(&mut self, ast: &ast::Module) -> Result<()> {
-        // Collect all top definitions into context.
+        // Collect all top definitions into context first.
         let mut ctx = HashMap::new();
         for topdef in &ast.top_definitions {
             match topdef {
