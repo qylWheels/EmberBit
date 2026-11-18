@@ -11,6 +11,7 @@ pub enum SemanticError {
     Variable(String),
     IndexType(String),
     SliceType(String),
+    ArgumentType(Vec<SemanticError>),
 }
 
 pub type Result<T> = std::result::Result<T, SemanticError>;
@@ -380,7 +381,55 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
-            ast::Expression::Call(ast::CallExpression { callee, args }) => todo!(),
+            ast::Expression::Call(ast::CallExpression { callee, args }) => {
+                let callee_type = self.check_expression(callee, ctx)?;
+                match callee_type {
+                    Type::Function(func_type) => {
+                        let param_types = args
+                            .iter()
+                            .map(|arg| self.check_expression(arg, ctx))
+                            .collect::<Vec<_>>();
+
+                        // Check if any argument failed to be checked.
+                        let invalid_args = param_types
+                            .iter()
+                            .filter(|ty_result| ty_result.is_err())
+                            .map(|ty_result| ty_result.clone().unwrap_err())
+                            .collect::<Vec<_>>();
+                        if !invalid_args.is_empty() {
+                            return Err(SemanticError::ArgumentType(invalid_args));
+                        }
+
+                        // Check if the number of arguments matches the number of parameters.
+                        if param_types.len() != func_type.param_types.len() {
+                            return Err(SemanticError::IncompatibleType(format!(
+                                "Function has {} parameters, but {} arguments are given",
+                                func_type.param_types.len(),
+                                args.len()
+                            )));
+                        }
+
+                        // Check if the parameter types match.
+                        let param_types = param_types
+                            .iter()
+                            .map(|ty_result| ty_result.clone().unwrap())
+                            .collect::<Vec<_>>();
+                        if param_types != func_type.param_types {
+                            return Err(SemanticError::IncompatibleType(format!(
+                                "Function has incompatible parameter types: {:?}(declared) vs {:?}(given)",
+                                &param_types, &func_type.param_types
+                            )));
+                        }
+                        Ok((*func_type.return_type).clone())
+                    }
+                    other => {
+                        return Err(SemanticError::IncompatibleType(format!(
+                            "Callee must be of type Function, but {:?} is given",
+                            other
+                        )));
+                    }
+                }
+            }
         }
     }
 }
