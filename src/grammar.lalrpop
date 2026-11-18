@@ -155,6 +155,26 @@ IndexExpression: Expression = {
             index: Box::new(index),
         }),
 
+    CallExpression,
+};
+
+CallExpression: Expression = {
+    <e:Expression> "(" ")" => {
+        Expression::Call(CallExpression {
+            callee: Box::new(e),
+            args: Box::new(vec![]),
+        })
+    },
+
+    <e:Expression> "(" <first:Expression> <rest:("," <Expression>)*> ","? ")" => {
+        let mut args = vec![first];
+        args.extend(rest);
+        Expression::Call(CallExpression {
+            callee: Box::new(e),
+            args: Box::new(args),
+        })
+    },
+
     ParenExpression,
 };
 
