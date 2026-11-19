@@ -41,7 +41,7 @@ pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                         }
                     )
                 );
-            alt((parse_index, parse_range)).parse_next(content)
+            (alt((parse_range, parse_index)), ']').map(|(e, _)| e).parse_next(content)
         }),
         _ => fail
     };
