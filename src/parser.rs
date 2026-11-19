@@ -1,3 +1,5 @@
+use std::array::repeat;
+
 use crate::ast;
 
 use winnow::Parser;
@@ -13,7 +15,23 @@ macro_rules! ws {
     };
 }
 
-pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+// pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {}
+
+fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
+    let parse_trivial_type =
+        parse_available_name.map(|s: String| ast::Type::Trivial(ast::TrivialType { name: s }));
+    let parse_function_type = ('(', separated(0.., parse_type, ','), ')', parse_type).map(
+        |(_, types, _, return_type)| {
+            ast::Type::Function(ast::FunctionType {
+                param_types: types,
+                return_type: Box::new(return_type),
+            })
+        },
+    );
+    alt((parse_function_type, parse_trivial_type)).parse_next(input)
+}
+
+fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     let prefix_parser = dispatch! {any;
         _ => fail
     };
