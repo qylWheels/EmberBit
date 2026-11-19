@@ -15,7 +15,25 @@ macro_rules! ws {
     };
 }
 
-// pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {}
+pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
+    let parse_const_statement = (
+        "const",
+        parse_identifier,
+        ':',
+        parse_type,
+        '=',
+        parse_expression,
+    )
+        .map(|(_, id, _, ty, _, expr)| {
+            let id = match id {
+                ast::Expression::Identifier(id) => id.name,
+                _ => panic!("Expected identifier in lhs of const statement"),
+            };
+            ast::Statement::ConstDef(ast::ConstDefStatement { name: id, ty, expr })
+        });
+
+    alt((parse_const_statement,)).parse_next(input)
+}
 
 fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
     let parse_trivial_type =
