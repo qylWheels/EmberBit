@@ -49,7 +49,15 @@ pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
             ast::Statement::VarDef(ast::VarDefStatement { name: id, ty, expr })
         });
 
-    alt((parse_const_statement, parse_var_statement)).parse_next(input)
+    let parse_assignment_statement = (parse_expression, '=', parse_expression, ';')
+        .map(|(lhs, _, rhs, _)| ast::Statement::Assignment(ast::AssignmentStatement { lhs, rhs }));
+
+    alt((
+        parse_const_statement,
+        parse_var_statement,
+        parse_assignment_statement,
+    ))
+    .parse_next(input)
 }
 
 fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
