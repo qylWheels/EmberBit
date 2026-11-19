@@ -8,12 +8,12 @@ use winnow::token::*;
 
 macro_rules! ws {
     ($inner:expr) => {
-        delimited(multispace0, inner, multispace0)
+        delimited(multispace0, $inner, multispace0)
     };
 }
 
 pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
-    repeat(0.., parse_function)
+    repeat(0.., ws!(parse_function))
         .map(|funcs: Vec<ast::FunctionDefinition>| {
             let topdefs = funcs
                 .iter()
@@ -30,25 +30,28 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
     let parse_function_def = (
         "func",
         space1,
-        parse_identifier,
+        ws!(parse_identifier),
         '(',
-        separated(0.., (parse_identifier, ':', parse_type), ',').map(
-            |args: Vec<(ast::Expression, _, ast::Type)>| {
-                args.iter()
-                    .map(|(id, _, ty)| {
-                        let id = match id {
-                            ast::Expression::Identifier(id) => id.name.clone(),
-                            _ => panic!("Expected identifier in function definition"),
-                        };
-                        (id, ty.clone())
-                    })
-                    .collect::<Vec<_>>()
-            },
-        ),
+        ws!(separated(
+            0..,
+            (ws!(parse_identifier), ':', ws!(parse_type)),
+            ','
+        ))
+        .map(|args: Vec<(ast::Expression, _, ast::Type)>| {
+            args.iter()
+                .map(|(id, _, ty)| {
+                    let id = match id {
+                        ast::Expression::Identifier(id) => id.name.clone(),
+                        _ => panic!("Expected identifier in function definition"),
+                    };
+                    (id, ty.clone())
+                })
+                .collect::<Vec<_>>()
+        }),
         ')',
-        parse_type,
+        ws!(parse_type),
         '{',
-        repeat(0.., parse_statement),
+        ws!(repeat(0.., ws!(parse_statement))),
         '}',
     )
         .map(|(_, _, id, _, params, _, ret_ty, _, body, _)| {
@@ -71,11 +74,11 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_const_statement = (
         "const",
         space1,
-        parse_identifier,
+        ws!(parse_identifier),
         ':',
-        parse_type,
+        ws!(parse_type),
         '=',
-        parse_expression,
+        ws!(parse_expression),
         ';',
     )
         .map(|(_, _, id, _, ty, _, expr, _)| {
@@ -89,11 +92,11 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_var_statement = (
         "var",
         space1,
-        parse_identifier,
+        ws!(parse_identifier),
         ':',
-        parse_type,
+        ws!(parse_type),
         '=',
-        parse_expression,
+        ws!(parse_expression),
         ';',
     )
         .map(|(_, _, id, _, ty, _, expr, _)| {
@@ -104,7 +107,7 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
             ast::Statement::VarDef(ast::VarDefStatement { name: id, ty, expr })
         });
 
-    let parse_assignment_statement = (parse_expression, '=', parse_expression, ';')
+    let parse_assignment_statement = (ws!(parse_expression), '=', ws!(parse_expression), ';')
         .map(|(lhs, _, rhs, _)| ast::Statement::Assignment(ast::AssignmentStatement { lhs, rhs }));
 
     let parse_return_statement = ("return", space1, parse_expression, ';')
@@ -126,14 +129,18 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
 fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
     let parse_trivial_type =
         parse_available_name.map(|s: String| ast::Type::Trivial(ast::TrivialType { name: s }));
-    let parse_function_type = ('(', separated(0.., parse_type, ','), ')', parse_type).map(
-        |(_, types, _, return_type)| {
+    let parse_function_type = (
+        '(',
+        ws!(separated(0.., ws!(parse_type), ',')),
+        ')',
+        parse_type,
+    )
+        .map(|(_, types, _, return_type)| {
             ast::Type::Function(ast::FunctionType {
                 param_types: types,
                 return_type: Box::new(return_type),
             })
-        },
-    );
+        });
     alt((parse_function_type, parse_trivial_type)).parse_next(input)
 }
 
@@ -206,7 +213,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
 
-    expression(parse_atom_expression)
+    expression(ws!(parse_atom_expression))
         .prefix(prefix_parser)
         .infix(infix_parser)
         .postfix(postfix_parser)
@@ -214,7 +221,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
-    let parse_paren_expr = delimited('(', parse_expression, ')');
+    let parse_paren_expr = delimited('(', ws!(parse_expression), ')');
     alt((parse_identifier, parse_integer, parse_paren_expr)).parse_next(input)
 }
 
