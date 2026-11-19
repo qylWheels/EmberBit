@@ -118,3 +118,9 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         .map(|i| ast::Expression::Integer(ast::IntegerLiteral { value: i }))
         .parse_next(input)
 }
+
+fn parse_avail_name<'a>(input: &mut &'a str) -> Result<String> {
+    (one_of(('a'..='z', 'A'..='Z', '_')), alphanumeric0)
+        .map(|(first, rest)| format!("{}{}", first, rest))
+        .parse_next(input)
+}
