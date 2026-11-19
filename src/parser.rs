@@ -57,11 +57,15 @@ pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_return_statement = ("return", space1, parse_expression, ';')
         .map(|(_, _, expr, _)| ast::Statement::Return(ast::ReturnStatement { expr }));
 
+    let parse_expression_statement = (parse_expression, ';')
+        .map(|(expr, _)| ast::Statement::Expression(ast::ExpressionStatement { expr }));
+
     alt((
         parse_const_statement,
         parse_var_statement,
         parse_assignment_statement,
         parse_return_statement,
+        parse_expression_statement,
     ))
     .parse_next(input)
 }
