@@ -26,6 +26,40 @@ pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
         .parse_next(input)
 }
 
+fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinition> {
+    let parse_field_defs = separated(0.., (ws!(parse_identifier), ':', ws!(parse_type)), ';').map(
+        |fields: Vec<(ast::Expression, _, ast::Type)>| {
+            fields
+                .iter()
+                .map(|(id, _, ty)| {
+                    let id = match id {
+                        ast::Expression::Identifier(id) => id.name.clone(),
+                        _ => panic!("Expected identifier in struct definition"),
+                    };
+                    (id, ty.clone())
+                })
+                .collect::<Vec<_>>()
+        },
+    );
+
+    let parse_struct_def = (
+        "struct",
+        space1,
+        ws!(parse_identifier),
+        '{',
+        ws!(parse_field_defs),
+        '}',
+    )
+        .map(|(_, _, id, _, fields, _)| {
+            let id = match id {
+                ast::Expression::Identifier(id) => id.name,
+                _ => panic!("Expected identifier in struct definition"),
+            };
+            ast::StructDefinition { name: id, fields }
+        });
+    alt((parse_struct_def,)).parse_next(input)
+}
+
 fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
     let parse_function_def = (
         "func",
