@@ -13,6 +13,10 @@ macro_rules! ws {
     };
 }
 
+fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+    alt((parse_identifier, parse_integer)).parse_next(input)
+}
+
 fn parse_identifier<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     (one_of(('a'..='z', 'A'..='Z', '_')), alphanumeric0)
         .map(|(first, rest)| format!("{}{}", first, rest))
