@@ -2,6 +2,7 @@ use crate::ast;
 
 use winnow::Parser;
 use winnow::Result;
+use winnow::ascii::alphanumeric0;
 use winnow::ascii::digit0;
 use winnow::combinator::*;
 use winnow::token::*;
@@ -10,6 +11,13 @@ macro_rules! ws {
     ($inner:expr) => {
         delimited(multispace0, inner, multispace0)
     };
+}
+
+fn parse_identifier<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+    (one_of(('a'..='z', 'A'..='Z', '_')), alphanumeric0)
+        .map(|(first, rest)| format!("{}{}", first, rest))
+        .map(|s| ast::Expression::Identifier(ast::Identifier { name: s }))
+        .parse_next(input)
 }
 
 fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
