@@ -44,8 +44,8 @@ pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
             (alt((parse_range, parse_index)), ']').map(|(e, _)| e).parse_next(content)
         }),
         '(' => Postfix(31, |input: &mut &str, base: ast::Expression| {
-            separated(0.., parse_expression, ',')
-                .map(|args| ast::Expression::Call(ast::CallExpression {
+            (separated(0.., parse_expression, ','), ')')
+                .map(|(args, _)| ast::Expression::Call(ast::CallExpression {
                     callee: Box::new(base.clone()),
                     args
                 }))
