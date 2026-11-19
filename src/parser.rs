@@ -4,9 +4,7 @@ use crate::ast;
 
 use winnow::Parser;
 use winnow::Result;
-use winnow::ascii::alphanumeric0;
-use winnow::ascii::digit0;
-use winnow::ascii::space1;
+use winnow::ascii::*;
 use winnow::combinator::*;
 use winnow::token::*;
 
