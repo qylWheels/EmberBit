@@ -18,6 +18,34 @@ pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
     let infix_parser = dispatch! {any;
+        '+' => Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+            Ok(ast::Expression::Binary(ast::BinaryExpression {
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+                op: ast::BinaryOp::Add,
+            }))
+        }),
+        '-' => Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+            Ok(ast::Expression::Binary(ast::BinaryExpression {
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+                op: ast::BinaryOp::Sub,
+            }))
+        }),
+        '*' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+            Ok(ast::Expression::Binary(ast::BinaryExpression {
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+                op: ast::BinaryOp::Mul,
+            }))
+        }),
+        '/' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+            Ok(ast::Expression::Binary(ast::BinaryExpression {
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+                op: ast::BinaryOp::Div,
+            }))
+        }),
         _ => fail
     };
     let postfix_parser = dispatch! {any;
