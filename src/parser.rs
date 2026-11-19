@@ -13,7 +13,7 @@ macro_rules! ws {
     };
 }
 
-fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     let prefix_parser = dispatch! {any;
         _ => fail
     };
@@ -22,9 +22,26 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     };
     let postfix_parser = dispatch! {any;
         '[' => Postfix(32, |content: &mut &str, base: ast::Expression| {
-            parse_expression
-                .map(|e: ast::Expression| ast::Expression::Index(ast::IndexExpression { base: Box::new(base.clone()), index: Box::new(e) }))
-                .parse_next(content)
+            let parse_index = parse_expression
+                .map(|e: ast::Expression|
+                    ast::Expression::Index(
+                        ast::IndexExpression {
+                            base: Box::new(base.clone()),
+                            index: Box::new(e)
+                        }
+                    )
+                );
+            let parse_range = (parse_expression, ':', parse_expression)
+                .map(|(start, _, end): (ast::Expression, _, ast::Expression)|
+                    ast::Expression::Slice(
+                        ast::SliceExpression {
+                            base: Box::new(base.clone()),
+                            start: Box::new(start.clone()),
+                            end: Box::new(end.clone())
+                        }
+                    )
+                );
+            alt((parse_index, parse_range)).parse_next(content)
         }),
         _ => fail
     };
