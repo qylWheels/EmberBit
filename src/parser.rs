@@ -62,7 +62,8 @@ pub fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
-    alt((parse_identifier, parse_integer)).parse_next(input)
+    let parse_paren_expr = delimited('(', parse_expression, ')');
+    alt((parse_identifier, parse_integer, parse_paren_expr)).parse_next(input)
 }
 
 fn parse_identifier<'a>(input: &mut &'a str) -> Result<ast::Expression> {
