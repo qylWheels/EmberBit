@@ -23,8 +23,9 @@ pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
         parse_type,
         '=',
         parse_expression,
+        ';',
     )
-        .map(|(_, _, id, _, ty, _, expr)| {
+        .map(|(_, _, id, _, ty, _, expr, _)| {
             let id = match id {
                 ast::Expression::Identifier(id) => id.name,
                 _ => panic!("Expected identifier in lhs of const statement"),
@@ -40,8 +41,9 @@ pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
         parse_type,
         '=',
         parse_expression,
+        ';',
     )
-        .map(|(_, _, id, _, ty, _, expr)| {
+        .map(|(_, _, id, _, ty, _, expr, _)| {
             let id = match id {
                 ast::Expression::Identifier(id) => id.name,
                 _ => panic!("Expected identifier in lhs of var statement"),
