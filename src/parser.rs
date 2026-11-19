@@ -6,6 +6,7 @@ use winnow::Parser;
 use winnow::Result;
 use winnow::ascii::alphanumeric0;
 use winnow::ascii::digit0;
+use winnow::ascii::space1;
 use winnow::combinator::*;
 use winnow::token::*;
 
@@ -18,13 +19,14 @@ macro_rules! ws {
 pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_const_statement = (
         "const",
+        space1,
         parse_identifier,
         ':',
         parse_type,
         '=',
         parse_expression,
     )
-        .map(|(_, id, _, ty, _, expr)| {
+        .map(|(_, _, id, _, ty, _, expr)| {
             let id = match id {
                 ast::Expression::Identifier(id) => id.name,
                 _ => panic!("Expected identifier in lhs of const statement"),
