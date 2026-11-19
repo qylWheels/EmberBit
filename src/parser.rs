@@ -13,17 +13,31 @@ macro_rules! ws {
 }
 
 pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
-    repeat(0.., ws!(parse_function))
-        .map(|funcs: Vec<ast::FunctionDefinition>| {
-            let topdefs = funcs
-                .iter()
-                .map(|f| ast::TopDefinition::Function(f.clone()))
-                .collect::<Vec<_>>();
-            ast::Module {
-                top_definitions: topdefs,
-            }
-        })
-        .parse_next(input)
+    enum TopDefinition {
+        Struct(ast::StructDefinition),
+        Function(ast::FunctionDefinition),
+    }
+
+    repeat(
+        0..,
+        ws!(alt((
+            parse_function.map(TopDefinition::Function),
+            parse_struct_definition.map(TopDefinition::Struct)
+        ))),
+    )
+    .map(|topdefs: Vec<TopDefinition>| {
+        let topdefs = topdefs
+            .iter()
+            .map(|topdef| match topdef {
+                TopDefinition::Function(f) => ast::TopDefinition::Function(f.clone()),
+                TopDefinition::Struct(s) => ast::TopDefinition::Struct(s.clone()),
+            })
+            .collect::<Vec<_>>();
+        ast::Module {
+            top_definitions: topdefs,
+        }
+    })
+    .parse_next(input)
 }
 
 fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinition> {
