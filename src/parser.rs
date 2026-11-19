@@ -95,8 +95,7 @@ fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 fn parse_identifier<'a>(input: &mut &'a str) -> Result<ast::Expression> {
-    (one_of(('a'..='z', 'A'..='Z', '_')), alphanumeric0)
-        .map(|(first, rest)| format!("{}{}", first, rest))
+    parse_avail_name
         .map(|s| ast::Expression::Identifier(ast::Identifier { name: s }))
         .parse_next(input)
 }
