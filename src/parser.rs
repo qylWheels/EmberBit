@@ -12,7 +12,21 @@ macro_rules! ws {
     };
 }
 
-pub fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
+pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
+    repeat(0.., parse_function)
+        .map(|funcs: Vec<ast::FunctionDefinition>| {
+            let topdefs = funcs
+                .iter()
+                .map(|f| ast::TopDefinition::Function(f.clone()))
+                .collect::<Vec<_>>();
+            ast::Module {
+                top_definitions: topdefs,
+            }
+        })
+        .parse_next(input)
+}
+
+fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
     let parse_function_def = (
         "func",
         space1,
