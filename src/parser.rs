@@ -1,5 +1,3 @@
-use std::array::repeat;
-
 use crate::ast;
 
 use winnow::Parser;
@@ -14,7 +12,48 @@ macro_rules! ws {
     };
 }
 
-pub fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
+pub fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
+    let parse_function_def = (
+        "func",
+        space1,
+        parse_identifier,
+        '(',
+        separated(0.., (parse_identifier, ':', parse_type), ',').map(
+            |args: Vec<(ast::Expression, _, ast::Type)>| {
+                args.iter()
+                    .map(|(id, _, ty)| {
+                        let id = match id {
+                            ast::Expression::Identifier(id) => id.name.clone(),
+                            _ => panic!("Expected identifier in function definition"),
+                        };
+                        (id, ty.clone())
+                    })
+                    .collect::<Vec<_>>()
+            },
+        ),
+        ')',
+        parse_type,
+        '{',
+        repeat(0.., parse_statement),
+        '}',
+    )
+        .map(|(_, _, id, _, params, _, ret_ty, _, body, _)| {
+            let id = match id {
+                ast::Expression::Identifier(id) => id.name,
+                _ => panic!("Expected identifier in function definition"),
+            };
+            ast::FunctionDefinition {
+                name: id,
+                params,
+                return_type: ret_ty,
+                body,
+            }
+        });
+
+    alt((parse_function_def,)).parse_next(input)
+}
+
+fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_const_statement = (
         "const",
         space1,
