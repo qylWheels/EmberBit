@@ -13,6 +13,24 @@ macro_rules! ws {
     };
 }
 
+fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+    let prefix_parser = dispatch! {any;
+        _ => fail
+    };
+    let infix_parser = dispatch! {any;
+        _ => fail
+    };
+    let postfix_parser = dispatch! {any;
+        _ => fail
+    };
+
+    expression(parse_atom_expression)
+        .prefix(prefix_parser)
+        .infix(infix_parser)
+        .postfix(postfix_parser)
+        .parse_next(input)
+}
+
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     alt((parse_identifier, parse_integer)).parse_next(input)
 }
