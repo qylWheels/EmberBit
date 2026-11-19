@@ -21,6 +21,11 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
     let postfix_parser = dispatch! {any;
+        '[' => Postfix(32, |content: &mut &str, base: ast::Expression| {
+            parse_expression
+                .map(|e: ast::Expression| ast::Expression::Index(ast::IndexExpression { base: Box::new(base.clone()), index: Box::new(e) }))
+                .parse_next(content)
+        }),
         _ => fail
     };
 
