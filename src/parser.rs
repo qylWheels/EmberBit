@@ -269,6 +269,20 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         .parse_next(input)
 }
 
+fn parse_struct_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+    (
+        ws!(parse_available_name),
+        '{',
+        ws!(separated(0.., ws!(parse_id_and_expr), ';')),
+        ws!(opt(';')),
+        '}',
+    )
+        .map(|(name, _, fields, _, _)| {
+            ast::Expression::Struct(ast::StructExpression { name, fields })
+        })
+        .parse_next(input)
+}
+
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     alt((parse_identifier, parse_integer, parse_paren_expr)).parse_next(input)
 }
