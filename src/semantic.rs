@@ -32,6 +32,9 @@ pub struct IdentifierProperties {
 pub struct SemanticChecker {
     /// usize: address of AST node
     type_of_node: HashMap<usize, Type>,
+
+    /// Struct type information.
+    struct_type_info: HashMap<String, ast::StructDefinition>,
 }
 
 impl Default for SemanticChecker {
@@ -44,6 +47,7 @@ impl SemanticChecker {
     pub fn new() -> Self {
         Self {
             type_of_node: HashMap::new(),
+            struct_type_info: HashMap::new(),
         }
     }
 
@@ -61,7 +65,9 @@ impl SemanticChecker {
         for topdef in &ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_i) => {}
-                ast::TopDefinition::Struct(_s) => {}
+                ast::TopDefinition::Struct(s) => {
+                    self.struct_type_info.insert(s.name.clone(), s.clone());
+                }
                 ast::TopDefinition::Function(f) => {
                     let annotated_param_types: Vec<Type> = f
                         .params
@@ -464,6 +470,44 @@ impl SemanticChecker {
                         )));
                     }
                 }
+            }
+            ast::Expression::Struct(ast::StructExpression { name, fields }) => {
+                // Get struct type information by name.
+                let struct_def = self.struct_type_info.get(name).ok_or_else(|| {
+                    SemanticError::NoType(format!("Type {} is not defined", name))
+                })?;
+                let struct_name = struct_def.name.clone();
+                let struct_fields = struct_def.fields.clone();
+
+                // Infer type of each field expression.
+                let field_types = fields
+                    .iter()
+                    .map(|(_, expr)| self.check_expression(expr, ctx))
+                    .collect::<Result<Vec<_>>>()?;
+
+                // Check if the field types match the declared types.
+                for ((name, _), ty) in fields.iter().zip(field_types.iter()) {
+                    let field_annotated_type = &struct_fields
+                        .iter()
+                        .find(|(n, _)| n == name)
+                        .ok_or_else(|| {
+                            SemanticError::UnboundedIdentifier(format!(
+                                "Field {} is not defined",
+                                name
+                            ))
+                        })?
+                        .1;
+                    if *ty != *field_annotated_type {
+                        return Err(SemanticError::IncompatibleType(format!(
+                            "Field {} has incompatible type {:?} (annotated) vs {:?} (given)",
+                            name, field_annotated_type, ty
+                        )));
+                    }
+                }
+
+                let ty = Type::Trivial(TrivialType { name: struct_name });
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
             }
         }
     }
