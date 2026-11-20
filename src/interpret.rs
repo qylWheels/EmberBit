@@ -26,6 +26,11 @@ pub struct Tuple {
 }
 
 #[derive(Debug, Clone)]
+pub struct Struct {
+    pub fields: HashMap<String, InnerMutableValueRef>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Function {
     pub ast: *const ast::FunctionDefinition,
 }
@@ -36,6 +41,7 @@ pub enum Value {
     Array(Array),
     Slice(Slice),
     Tuple(Tuple),
+    Struct(Struct),
     Function(Function),
 }
 
@@ -293,6 +299,27 @@ impl Interpreter {
                     }
                     _ => unreachable!(),
                 }
+            }
+            ast::Expression::Struct(e) => {
+                let field_names = e
+                    .fields
+                    .iter()
+                    .map(|(name, _)| name.clone())
+                    .collect::<Vec<_>>();
+                let field_exprs = e
+                    .fields
+                    .iter()
+                    .map(|(_, expr)| self.interpret_expression(expr, env))
+                    .collect::<InterpretResult<Vec<_>>>()?;
+                let fields = field_names
+                    .iter()
+                    .zip(field_exprs.iter())
+                    .map(|(name, expr)| (name.clone(), expr.clone()))
+                    .collect::<HashMap<_, _>>();
+                let value =
+                    InnerMutableValueRef(Rc::new(RefCell::new(Value::Struct(Struct { fields }))));
+                self.values.insert(value.clone());
+                Ok(value)
             }
         }
     }
