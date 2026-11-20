@@ -273,8 +273,8 @@ fn parse_struct_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     (
         ws!(parse_available_name),
         '{',
-        ws!(separated(0.., ws!(parse_id_and_expr), ';')),
-        ws!(opt(';')),
+        ws!(separated(0.., ws!(parse_id_and_expr), ',')),
+        ws!(opt(',')),
         '}',
     )
         .map(|(name, _, fields, _, _)| {
