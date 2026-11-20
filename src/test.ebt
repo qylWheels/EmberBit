@@ -1,14 +1,22 @@
-import foo.bar;
-
-struct Point { x: i32; y: i32; }
-
-function add(a: i32, b: i32) i32 {
-    return a + b;
+struct Point {
+    x: i32;
+    y: i32;
 }
 
-function main() i32 {
-    const a: i32 = 1;
-    const b: i32 = 2;
-    return add(a + b, a - b);
+struct List {
+    x: i32;
+    next: List;
 }
-    
+
+func main() i32 {
+    const p: Point = Point { x: 1, y: 2 };
+    return complicated(1, 2);
+}
+
+func add(x: i32, y: i32) i32 {
+    return x + y;
+}
+
+func complicated(x: i32, y: i32) i32 {
+    return (x - y) * x + y / x;
+}
