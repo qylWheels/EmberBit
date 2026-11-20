@@ -147,7 +147,7 @@ pub struct StructExpression {
 #[derive(Debug, Clone)]
 pub struct FieldAccessExpression {
     pub base: Box<Expression>,
-    pub field: String,
+    pub field: Identifier,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
