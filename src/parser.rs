@@ -262,7 +262,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
 
-    expression(ws!(parse_atom_expression))
+    expression(ws!(alt((parse_atom_expression, parse_struct_expr))))
         .prefix(prefix_parser)
         .infix(infix_parser)
         .postfix(postfix_parser)
