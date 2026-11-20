@@ -81,6 +81,7 @@ pub enum Expression {
     Integer(IntegerLiteral),
     Identifier(Identifier),
     Struct(StructExpression),
+    FieldAccess(FieldAccessExpression),
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +142,12 @@ pub struct Identifier {
 pub struct StructExpression {
     pub name: String,
     pub fields: Vec<(String, Expression)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FieldAccessExpression {
+    pub base: Box<Expression>,
+    pub field: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
