@@ -80,6 +80,7 @@ pub enum Expression {
     Call(CallExpression),
     Integer(IntegerLiteral),
     Identifier(Identifier),
+    Struct(StructExpression),
 }
 
 #[derive(Debug, Clone)]
@@ -134,6 +135,12 @@ pub struct IntegerLiteral {
 #[derive(Debug, Clone)]
 pub struct Identifier {
     pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct StructExpression {
+    pub name: String,
+    pub fields: Vec<(String, Expression)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
