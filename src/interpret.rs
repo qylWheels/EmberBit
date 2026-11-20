@@ -321,6 +321,17 @@ impl Interpreter {
                 self.values.insert(value.clone());
                 Ok(value)
             }
+            ast::Expression::FieldAccess(e) => {
+                let base = self.interpret_expression(e.base.as_ref(), env)?;
+                match &*base.0.borrow() {
+                    Value::Struct(struct_val) => {
+                        let field_val = struct_val.fields.get(&e.field.name).unwrap();
+                        self.values.insert(field_val.clone());
+                        Ok(field_val.clone())
+                    }
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 
