@@ -308,6 +308,12 @@ fn parse_id_and_type<'a>(input: &mut &'a str) -> Result<(String, ast::Type)> {
         .parse_next(input)
 }
 
+fn parse_id_and_expr<'a>(input: &mut &'a str) -> Result<(String, ast::Expression)> {
+    (ws!(parse_available_name), ':', ws!(parse_expression))
+        .map(|(name, _, expr)| (name, expr))
+        .parse_next(input)
+}
+
 fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
     (
         one_of(('a'..='z', 'A'..='Z', '_')),
