@@ -509,6 +509,38 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
+            ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
+                // Check type of base expression.
+                let base_type = self.check_expression(base, ctx)?;
+                let struct_name = match base_type {
+                    Type::Trivial(TrivialType { name }) => name,
+                    _ => Err(SemanticError::IncompatibleType(format!(
+                        "Base expression must be of type struct, but {:?} is given",
+                        base_type
+                    )))?,
+                };
+
+                // Get struct type information by name.
+                let struct_def = self.struct_type_info.get(&struct_name).ok_or_else(|| {
+                    SemanticError::NoType(format!("Type {} is not defined", &struct_name))
+                })?;
+
+                // Get field type.
+                let ty = struct_def
+                    .fields
+                    .iter()
+                    .find(|(s, _)| s == &field.name)
+                    .ok_or(SemanticError::UnboundedIdentifier(format!(
+                        "Field {} is not defined",
+                        &field.name
+                    )))?
+                    .1
+                    .clone();
+
+                // Store type of node.
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
+            }
         }
     }
 }
