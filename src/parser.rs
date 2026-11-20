@@ -299,7 +299,10 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
-    (one_of(('a'..='z', 'A'..='Z', '_')), alphanumeric0)
+    (
+        one_of(('a'..='z', 'A'..='Z', '_')),
+        alt((alphanumeric0, "_")),
+    )
         .map(|(first, rest)| format!("{}{}", first, rest))
         .parse_next(input)
 }
