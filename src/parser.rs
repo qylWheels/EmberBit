@@ -301,6 +301,13 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         .parse_next(input)
 }
 
+// TODO: Use this instead of implementing it manually.
+fn parse_id_and_type<'a>(input: &mut &'a str) -> Result<(String, ast::Type)> {
+    (ws!(parse_available_name), ':', ws!(parse_type))
+        .map(|(name, _, ty)| (name, ty))
+        .parse_next(input)
+}
+
 fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
     (
         one_of(('a'..='z', 'A'..='Z', '_')),
