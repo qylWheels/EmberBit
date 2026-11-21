@@ -512,10 +512,13 @@ impl SemanticChecker {
                             .iter()
                             .map(|arg| self.check_expression_assignable(arg, ctx))
                             .collect::<Result<Vec<_>>>()?;
-                        if annotated_mutabilities != param_mutabilities {
-                            return Err(SemanticError::Variable(format!(
-                                "Parameter requires constant, but a mutable value is given",
-                            )));
+                        for i in 0..annotated_mutabilities.len() {
+                            if annotated_mutabilities[i] == true && param_mutabilities[i] == false {
+                                return Err(SemanticError::Variable(format!(
+                                    "Parameter {} requires mutable, but a constant is given",
+                                    i
+                                )));
+                            }
                         }
 
                         // Check if the parameter types match.
