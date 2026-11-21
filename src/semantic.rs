@@ -292,7 +292,9 @@ impl SemanticChecker {
             }
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
                 // Check if base is assignable.
-                self.check_expression_assignable(base, ctx)?;
+                if !self.check_expression_assignable(base, ctx)? {
+                    return Ok(false);
+                }
 
                 let base_type = self.check_expression(base, ctx)?;
 
