@@ -180,16 +180,31 @@ fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
         parse_available_name.map(|s: String| ast::Type::Trivial(ast::TrivialType { name: s }));
     let parse_function_type = (
         '(',
-        ws!(separated(0.., ws!(parse_type), ',')),
+        ws!(separated(
+            0..,
+            (ws!(parse_mutability), space0, ws!(parse_type)),
+            ','
+        )),
         ')',
         parse_type,
     )
-        .map(|(_, types, _, return_type)| {
-            ast::Type::Function(ast::FunctionType {
-                param_types: types,
-                return_type: Box::new(return_type),
-            })
-        });
+        .map(
+            |(_, params, _, return_type): (
+                _,
+                Vec<(ast::Mutability, _, ast::Type)>,
+                _,
+                ast::Type,
+            )| {
+                let param_mutabilities_and_types = params
+                    .iter()
+                    .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
+                    .collect::<Vec<_>>();
+                ast::Type::Function(ast::FunctionType {
+                    params: param_mutabilities_and_types,
+                    return_type: Box::new(return_type),
+                })
+            },
+        );
     alt((parse_function_type, parse_trivial_type)).parse_next(input)
 }
 
