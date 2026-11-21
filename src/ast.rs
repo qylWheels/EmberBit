@@ -23,7 +23,7 @@ pub struct StructDefinition {
     pub fields: Vec<(String, Type)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mutability {
     Const,
     Var,
