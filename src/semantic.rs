@@ -148,19 +148,20 @@ impl SemanticChecker {
             .collect::<Result<Vec<_>>>()?;
         let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
 
-        let param_iter = param_mutabilities
+        let params = param_mutabilities
             .iter()
             .zip(&param_names)
             .zip(&annotated_param_types)
-            .map(|((mutability, name), ty)| (mutability.clone(), name.clone(), ty.clone()));
+            .map(|((mutability, name), ty)| (mutability.clone(), name.clone(), ty.clone()))
+            .collect::<Vec<_>>();
 
         // Add parameters to context.
-        for (mutability, name, ty) in param_iter {
+        for (mutability, name, ty) in params.iter() {
             curr_ctx.insert(
                 name.clone(),
                 IdentifierProperties {
                     ty: ty.clone(),
-                    variable: mutability == ast::Mutability::Var,
+                    variable: *mutability == ast::Mutability::Var,
                 },
             );
         }
@@ -189,7 +190,10 @@ impl SemanticChecker {
         }
 
         let ty = FunctionType {
-            param_types: annotated_param_types,
+            params: params
+                .iter()
+                .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
+                .collect(),
             return_type: Box::new(actual_return_type),
         };
         self.type_of_node.insert(
@@ -483,41 +487,51 @@ impl SemanticChecker {
                 let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
                     Type::Function(func_type) => {
-                        let param_types = args
+                        // Infer parameter types.
+                        let actual_param_types = args
                             .iter()
                             .map(|arg| self.check_expression(arg, ctx))
-                            .collect::<Vec<_>>();
-
-                        // Check if any argument failed to be checked.
-                        let invalid_args = param_types
-                            .iter()
-                            .filter(|ty_result| ty_result.is_err())
-                            .map(|ty_result| ty_result.clone().unwrap_err())
-                            .collect::<Vec<_>>();
-                        if !invalid_args.is_empty() {
-                            return Err(SemanticError::ArgumentType(invalid_args));
-                        }
+                            .collect::<Result<Vec<_>>>()?;
 
                         // Check if the number of arguments matches the number of parameters.
-                        if param_types.len() != func_type.param_types.len() {
+                        if actual_param_types.len() != func_type.params.len() {
                             return Err(SemanticError::IncompatibleType(format!(
                                 "Function has {} parameters, but {} arguments are given",
-                                func_type.param_types.len(),
+                                func_type.params.len(),
                                 args.len()
                             )));
                         }
 
-                        // Check if the parameter types match.
-                        let param_types = param_types
+                        // Check mutability of parameters.
+                        let annotated_mutabilities = func_type
+                            .params
                             .iter()
-                            .map(|ty_result| ty_result.clone().unwrap())
+                            .map(|(mutability, _)| *mutability == ast::Mutability::Var)
                             .collect::<Vec<_>>();
-                        if param_types != func_type.param_types {
-                            return Err(SemanticError::IncompatibleType(format!(
-                                "Function has incompatible parameter types: {:?}(declared) vs {:?}(given)",
-                                &param_types, &func_type.param_types
+                        let param_mutabilities = args
+                            .iter()
+                            .map(|arg| self.check_expression_assignable(arg, ctx))
+                            .collect::<Result<Vec<_>>>()?;
+                        if annotated_mutabilities != param_mutabilities {
+                            return Err(SemanticError::Variable(format!(
+                                "Parameter requires constant, but a mutable value is given",
                             )));
                         }
+
+                        // Check if the parameter types match.
+                        if actual_param_types
+                            != func_type
+                                .params
+                                .iter()
+                                .map(|(_, ty)| ty.clone())
+                                .collect::<Vec<_>>()
+                        {
+                            return Err(SemanticError::IncompatibleType(format!(
+                                "Function has incompatible parameter types: {:?}(declared) vs {:?}(given)",
+                                &actual_param_types, &func_type.params
+                            )));
+                        }
+
                         Ok((*func_type.return_type).clone())
                     }
                     other => {
