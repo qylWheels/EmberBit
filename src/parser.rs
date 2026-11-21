@@ -47,39 +47,26 @@ pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
 }
 
 fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinition> {
-    let parse_field_defs = separated(
-        0..,
-        (
-            ws!(parse_visibility),
-            ws!(parse_available_name),
-            ':',
-            ws!(parse_type),
-        ),
-        ';',
-    )
-    .map(|fields: Vec<(ast::Visibility, String, _, ast::Type)>| {
-        fields
-            .iter()
-            .map(|(visibility, id, _, ty)| (visibility.clone(), id.clone(), ty.clone()))
-            .collect::<Vec<_>>()
-    });
-
+    let parse_field_def = (parse_visibility, multispace1, parse_id_and_type)
+        .map(|(visibility, _, (id, ty))| (visibility.clone(), id.clone(), ty.clone()));
     let parse_method_def = (parse_visibility, multispace1, parse_function)
-        .map(|(visibility, _, methods)| (visibility.clone(), methods.clone()));
+        .map(|(visibility, _, method)| (visibility.clone(), method.clone()));
 
     let parse_struct_def = (
         "struct",
-        space1,
+        multispace1,
         ws!(parse_available_name),
         '{',
-        ws!(parse_field_defs),
-        ws!(opt(';')),
+        ws!(repeat(0.., ws!(terminated(ws!(parse_field_def), ';')))),
+        ws!(repeat(0.., ws!(parse_method_def))),
         '}',
     )
-        .map(|(_, _, id, _, fields, _, _)| ast::StructDefinition {
+        .map(|(_, _, id, _, fields, methods, _)| ast::StructDefinition {
             name: id.clone(),
             fields,
+            methods,
         });
+
     alt((parse_struct_def,)).parse_next(input)
 }
 
