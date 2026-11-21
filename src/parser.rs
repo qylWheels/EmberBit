@@ -84,17 +84,16 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
         ws!(separated(
             0..,
             (
-                parse_mutability,
-                space1,
+                ws!(parse_mutability),
                 ws!(parse_available_name),
                 ':',
                 ws!(parse_type)
             ),
             ','
         ))
-        .map(|args: Vec<(ast::Mutability, _, String, _, ast::Type)>| {
+        .map(|args: Vec<(ast::Mutability, String, _, ast::Type)>| {
             args.iter()
-                .map(|(mutability, _, id, _, ty)| (mutability.clone(), id.clone(), ty.clone()))
+                .map(|(mutability, id, _, ty)| (mutability.clone(), id.clone(), ty.clone()))
                 .collect::<Vec<_>>()
         }),
         ')',
