@@ -1,7 +1,7 @@
 struct Point {
-    x: i32;
-    y: i32;
-    distsquare: (const Point) i32;
+    public x: i32;
+    public y: i32;
+    public distsquare: (const Point) i32;
 }
 
 func main() i32 {
