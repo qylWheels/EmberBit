@@ -9,8 +9,10 @@ struct List {
 }
 
 func main() i32 {
-    const p: Point = Point { x: 100, y: 200 };
-    return complicated(p.x, p.y);
+    var p: Point = Point { x: 1, y: 2 };
+    p.x = 514;
+    p.y = 114000;
+    return add(p.x, p.y);
 }
 
 func add(x: i32, y: i32) i32 {
