@@ -368,6 +368,17 @@ impl Interpreter {
                     _ => unreachable!(),
                 };
             }
+            ast::Expression::FieldAccess(e) => {
+                let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
+                let base = unsafe { base.as_mut().unwrap() };
+                match &mut *base.0.borrow_mut() {
+                    Value::Struct(struct_val) => {
+                        let field_val = struct_val.fields.get_mut(&e.field.name).unwrap();
+                        return Ok(field_val as *mut InnerMutableValueRef);
+                    }
+                    _ => unreachable!(),
+                };
+            }
             _ => unreachable!(),
         }
     }
