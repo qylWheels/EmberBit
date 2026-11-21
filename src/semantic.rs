@@ -69,6 +69,11 @@ impl SemanticChecker {
                     self.struct_type_info.insert(s.name.clone(), s.clone());
                 }
                 ast::TopDefinition::Function(f) => {
+                    let param_mutabilities = f
+                        .params
+                        .iter()
+                        .map(|(mutability, _, _)| mutability.clone())
+                        .collect::<Vec<_>>();
                     let annotated_param_types: Vec<Type> = f
                         .params
                         .iter()
@@ -76,7 +81,11 @@ impl SemanticChecker {
                         .collect::<Result<Vec<_>>>()?;
                     let annotated_return_type = self.type_annotation_to_type(&f.return_type)?;
                     let func_type = Type::Function(FunctionType {
-                        param_types: annotated_param_types.clone(),
+                        params: param_mutabilities
+                            .iter()
+                            .zip(annotated_param_types.iter())
+                            .map(|(mutability, ty)| (mutability.clone(), ty.clone()))
+                            .collect(),
                         return_type: Box::new(annotated_return_type.clone()),
                     });
                     ctx.insert(
