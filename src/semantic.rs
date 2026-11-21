@@ -290,6 +290,37 @@ impl SemanticChecker {
                 };
                 return Ok(variable);
             }
+            ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
+                // Check if base is assignable.
+                self.check_expression_assignable(base, ctx)?;
+
+                let base_type = self.check_expression(base, ctx)?;
+
+                // Get struct actual type.
+                let struct_type = match &base_type {
+                    Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
+                        SemanticError::IncompatibleType(
+                            "Field access expression has non-struct type".into(),
+                        ),
+                    )?,
+                    _ => Err(SemanticError::IncompatibleType(
+                        "Field access expression has non-struct type".into(),
+                    ))?,
+                };
+
+                // Check if field is in struct.
+                struct_type
+                    .fields
+                    .iter()
+                    .find(|(name, _)| name == &field.name)
+                    .map(|(_, ty)| ty.clone())
+                    .ok_or(SemanticError::UnboundedIdentifier(format!(
+                        "Field {} is not defined",
+                        field.name
+                    )))?;
+
+                return Ok(true);
+            }
             _ => Ok(false),
         }
     }
