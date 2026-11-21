@@ -585,14 +585,14 @@ impl SemanticChecker {
                 for ((name, _), ty) in fields.iter().zip(field_types.iter()) {
                     let field_annotated_type = &struct_fields
                         .iter()
-                        .find(|(n, _)| n == name)
+                        .find(|(_, n, _)| n == name)
                         .ok_or_else(|| {
                             SemanticError::UnboundedIdentifier(format!(
                                 "Field {} is not defined",
                                 name
                             ))
                         })?
-                        .1;
+                        .2;
                     if *ty != *field_annotated_type {
                         return Err(SemanticError::IncompatibleType(format!(
                             "Field {} has incompatible type {:?} (annotated) vs {:?} (given)",
@@ -621,16 +621,34 @@ impl SemanticChecker {
                     SemanticError::NoType(format!("Type {} is not defined", &struct_name))
                 })?;
 
-                // Get field type.
-                let ty = struct_def
+                // Check visibility of field.
+                let field_visibility = struct_def
                     .fields
                     .iter()
-                    .find(|(s, _)| s == &field.name)
+                    .find(|(_, name, _)| name == &field.name)
                     .ok_or(SemanticError::UnboundedIdentifier(format!(
                         "Field {} is not defined",
                         &field.name
                     )))?
-                    .1
+                    .0;
+                // TODO: Allow accessing private fields in struct methods.
+                if field_visibility != Visibility::Public {
+                    return Err(SemanticError::Visibility(format!(
+                        "Field {} is private, for which accessing it by field access expression is not allowed",
+                        &field.name
+                    )));
+                }
+
+                // Get field type.
+                let ty = struct_def
+                    .fields
+                    .iter()
+                    .find(|(_, name, _)| name == &field.name)
+                    .ok_or(SemanticError::UnboundedIdentifier(format!(
+                        "Field {} is not defined",
+                        &field.name
+                    )))?
+                    .2
                     .clone();
 
                 // Store type of node.
