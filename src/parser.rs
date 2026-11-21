@@ -64,6 +64,9 @@ fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinit
             .collect::<Vec<_>>()
     });
 
+    let parse_method_def = (parse_visibility, multispace1, parse_function)
+        .map(|(visibility, _, methods)| (visibility.clone(), methods.clone()));
+
     let parse_struct_def = (
         "struct",
         space1,
