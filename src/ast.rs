@@ -24,9 +24,15 @@ pub struct StructDefinition {
 }
 
 #[derive(Debug, Clone)]
+pub enum ArgMutability {
+    Const,
+    Var,
+}
+
+#[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub name: String,
-    pub params: Vec<(String, Type)>,
+    pub params: Vec<(ArgMutability, String, Type)>,
     pub return_type: Type,
     pub body: Vec<Statement>,
 }
