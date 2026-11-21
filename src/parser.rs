@@ -47,20 +47,22 @@ pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
 }
 
 fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinition> {
-    let parse_field_defs = separated(0.., (ws!(parse_identifier), ':', ws!(parse_type)), ';').map(
-        |fields: Vec<(ast::Expression, _, ast::Type)>| {
-            fields
-                .iter()
-                .map(|(id, _, ty)| {
-                    let id = match id {
-                        ast::Expression::Identifier(id) => id.name.clone(),
-                        _ => panic!("Expected identifier in struct definition"),
-                    };
-                    (id, ty.clone())
-                })
-                .collect::<Vec<_>>()
-        },
-    );
+    let parse_field_defs = separated(
+        0..,
+        (
+            ws!(parse_visibility),
+            ws!(parse_available_name),
+            ':',
+            ws!(parse_type),
+        ),
+        ';',
+    )
+    .map(|fields: Vec<(ast::Visibility, String, _, ast::Type)>| {
+        fields
+            .iter()
+            .map(|(visibility, id, _, ty)| (visibility.clone(), id.clone(), ty.clone()))
+            .collect::<Vec<_>>()
+    });
 
     let parse_struct_def = (
         "struct",
