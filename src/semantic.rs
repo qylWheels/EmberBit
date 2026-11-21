@@ -564,6 +564,17 @@ impl SemanticChecker {
                 let struct_name = struct_def.name.clone();
                 let struct_fields = struct_def.fields.clone();
 
+                // If any field is private, it is not allowed to construct struct object
+                // by struct expression.
+                for (visibility, _, _) in &struct_fields {
+                    if *visibility != Visibility::Public {
+                        return Err(SemanticError::Visibility(format!(
+                            "Struct {} has private fields, for which constructing struct object by struct expression is not allowed",
+                            struct_name
+                        )));
+                    }
+                }
+
                 // Infer type of each field expression.
                 let field_types = fields
                     .iter()
