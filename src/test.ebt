@@ -9,6 +9,10 @@ struct Point {
         const y: i32 = p.y;
         return x * x + y * y;
     }
+
+    private func thisisprivatemethod(var p: Point) Point {
+        return p;
+    }
 }
 
 func main() i32 {
