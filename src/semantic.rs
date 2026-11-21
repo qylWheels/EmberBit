@@ -141,9 +141,9 @@ impl SemanticChecker {
 
         let param_iter = param_mutabilities
             .iter()
-            .zip(param_names)
-            .zip(annotated_param_types)
-            .map(|((mutability, name), ty)| (mutability, name, ty));
+            .zip(&param_names)
+            .zip(&annotated_param_types)
+            .map(|((mutability, name), ty)| (mutability.clone(), name.clone(), ty.clone()));
 
         // Add parameters to context.
         for (mutability, name, ty) in param_iter {
