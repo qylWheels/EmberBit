@@ -151,7 +151,7 @@ impl SemanticChecker {
                 name.clone(),
                 IdentifierProperties {
                     ty: ty.clone(),
-                    variable: *mutability == ast::Mutability::Var,
+                    variable: mutability == ast::Mutability::Var,
                 },
             );
         }
