@@ -24,7 +24,7 @@ pub struct StructDefinition {
 }
 
 #[derive(Debug, Clone)]
-pub enum ArgMutability {
+pub enum Mutability {
     Const,
     Var,
 }
@@ -32,7 +32,7 @@ pub enum ArgMutability {
 #[derive(Debug, Clone)]
 pub struct FunctionDefinition {
     pub name: String,
-    pub params: Vec<(ArgMutability, String, Type)>,
+    pub params: Vec<(Mutability, String, Type)>,
     pub return_type: Type,
     pub body: Vec<Statement>,
 }
