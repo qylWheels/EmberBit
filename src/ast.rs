@@ -26,7 +26,7 @@ pub enum Visibility {
 #[derive(Debug, Clone)]
 pub struct StructDefinition {
     pub name: String,
-    pub fields: Vec<(String, Type)>,
+    pub fields: Vec<(Visibility, String, Type)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
