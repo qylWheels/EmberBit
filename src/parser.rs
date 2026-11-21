@@ -187,11 +187,11 @@ fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
         '(',
         ws!(separated(
             0..,
-            (ws!(parse_mutability), space0, ws!(parse_type)),
+            (lws!(parse_mutability), multispace1, ws!(parse_type)),
             ','
         )),
         ')',
-        parse_type,
+        ws!(parse_type),
     )
         .map(
             |(_, params, _, return_type): (
