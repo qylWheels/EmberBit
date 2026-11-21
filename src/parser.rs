@@ -83,18 +83,18 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
         '(',
         ws!(separated(
             0..,
-            (ws!(parse_identifier), ':', ws!(parse_type)),
+            (
+                ws!(parse_mutability),
+                space1,
+                ws!(parse_available_name),
+                ':',
+                ws!(parse_type)
+            ),
             ','
         ))
-        .map(|args: Vec<(ast::Expression, _, ast::Type)>| {
+        .map(|args: Vec<(ast::Mutability, _, String, _, ast::Type)>| {
             args.iter()
-                .map(|(id, _, ty)| {
-                    let id = match id {
-                        ast::Expression::Identifier(id) => id.name.clone(),
-                        _ => panic!("Expected identifier in function definition"),
-                    };
-                    (id, ty.clone())
-                })
+                .map(|(mutability, _, id, _, ty)| (mutability.clone(), id.clone(), ty.clone()))
                 .collect::<Vec<_>>()
         }),
         ')',
