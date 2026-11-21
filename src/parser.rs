@@ -350,3 +350,13 @@ fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
         .map(|(first, rest)| format!("{}{}", first, rest))
         .parse_next(input)
 }
+
+fn parse_mutability<'a>(input: &mut &'a str) -> Result<ast::Mutability> {
+    alt(("const", "var"))
+        .map(|s| match s {
+            "const" => ast::Mutability::Const,
+            "var" => ast::Mutability::Var,
+            _ => panic!("Expect \"const\" or \"var\", but got {:?}", s),
+        })
+        .parse_next(input)
+}
