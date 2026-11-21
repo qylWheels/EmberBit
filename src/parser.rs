@@ -371,6 +371,16 @@ fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
         .parse_next(input)
 }
 
+fn parse_visibility<'a>(input: &mut &'a str) -> Result<ast::Visibility> {
+    alt(("public", "private"))
+        .map(|s| match s {
+            "public" => ast::Visibility::Public,
+            "private" => ast::Visibility::Private,
+            _ => panic!("Expect \"public\" or \"private\", but got {:?}", s),
+        })
+        .parse_next(input)
+}
+
 fn parse_mutability<'a>(input: &mut &'a str) -> Result<ast::Mutability> {
     alt(("const", "var"))
         .map(|s| match s {
