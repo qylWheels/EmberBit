@@ -12,6 +12,7 @@ pub enum SemanticError {
     IndexType(String),
     SliceType(String),
     ArgumentType(Vec<SemanticError>),
+    Visibility(String),
 }
 
 pub type Result<T> = std::result::Result<T, SemanticError>;
@@ -22,6 +23,7 @@ type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
 type FunctionType = ast::FunctionType;
+type Visibility = ast::Visibility;
 
 #[derive(Debug, Clone)]
 pub struct IdentifierProperties {
@@ -339,15 +341,24 @@ impl SemanticChecker {
                 };
 
                 // Check if field is in struct.
-                struct_type
+                let field_visibility_and_type = struct_type
                     .fields
                     .iter()
-                    .find(|(name, _)| name == &field.name)
-                    .map(|(_, ty)| ty.clone())
+                    .find(|(_, name, _)| name == &field.name)
+                    .map(|(visibility, _, ty)| (visibility.clone(), ty.clone()))
                     .ok_or(SemanticError::UnboundedIdentifier(format!(
                         "Field {} is not defined",
                         field.name
                     )))?;
+
+                // Check if field is visible.
+                // TODO: It is ok to visit private fields in struct methods.
+                if field_visibility_and_type.0 != Visibility::Public {
+                    return Err(SemanticError::Visibility(format!(
+                        "Field {} is not visible outside struct definition",
+                        field.name
+                    )));
+                }
 
                 return Ok(true);
             }
