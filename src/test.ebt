@@ -1,17 +1,19 @@
 struct Point {
     x: i32;
     y: i32;
-    distsquare: (const i32, const i32) i32;
+    distsquare: (const Point) i32;
 }
 
 func main() i32 {
     var p: Point = Point { x: 1, y: 2, distsquare: distsquare };
     p.x = 2;
     p.y = 3;
-    return p.distsquare(p.x, p.y);
+    return p.distsquare(p);
 }
 
-func distsquare(const x: i32, const y: i32) i32 {
+func distsquare(const p: Point) i32 {
+    const x: i32 = p.x;
+    const y: i32 = p.y;
     return x * x + y * y;
 }
 
