@@ -67,18 +67,15 @@ fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinit
     let parse_struct_def = (
         "struct",
         space1,
-        ws!(parse_identifier),
+        ws!(parse_available_name),
         '{',
         ws!(parse_field_defs),
         ws!(opt(';')),
         '}',
     )
-        .map(|(_, _, id, _, fields, _, _)| {
-            let id = match id {
-                ast::Expression::Identifier(id) => id.name,
-                _ => panic!("Expected identifier in struct definition"),
-            };
-            ast::StructDefinition { name: id, fields }
+        .map(|(_, _, id, _, fields, _, _)| ast::StructDefinition {
+            name: id.clone(),
+            fields,
         });
     alt((parse_struct_def,)).parse_next(input)
 }
