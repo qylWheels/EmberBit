@@ -72,7 +72,7 @@ impl SemanticChecker {
                     let annotated_param_types: Vec<Type> = f
                         .params
                         .iter()
-                        .map(|(_name, ty)| self.type_annotation_to_type(ty))
+                        .map(|(_, _, ty)| self.type_annotation_to_type(ty))
                         .collect::<Result<Vec<_>>>()?;
                     let annotated_return_type = self.type_annotation_to_type(&f.return_type)?;
                     let func_type = Type::Function(FunctionType {
@@ -117,26 +117,41 @@ impl SemanticChecker {
     ) -> Result<ast::FunctionType> {
         let mut curr_ctx = ctx.clone();
 
+        // Check parameter types.
         let annotated_param_types: Vec<Type> = ast
             .params
             .iter()
-            .map(|(_name, ty)| self.type_annotation_to_type(ty))
+            .map(|(_, _, ty)| self.type_annotation_to_type(ty))
             .collect::<Result<Vec<_>>>()?;
         let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
 
-        // Add parameters to context.
+        // Get parameter names.
         let param_names = ast
             .params
             .iter()
-            .map(|(name, _)| name.clone())
+            .map(|(_, name, _)| name.clone())
             .collect::<Vec<_>>();
-        for (name, ty) in param_names.iter().zip(&annotated_param_types) {
+
+        // Get parameter mutabilities.
+        let param_mutabilities = ast
+            .params
+            .iter()
+            .map(|(mutability, _, _)| mutability.clone())
+            .collect::<Vec<_>>();
+
+        let param_iter = param_mutabilities
+            .iter()
+            .zip(param_names)
+            .zip(annotated_param_types)
+            .map(|((mutability, name), ty)| (mutability, name, ty));
+
+        // Add parameters to context.
+        for (mutability, name, ty) in param_iter {
             curr_ctx.insert(
                 name.clone(),
                 IdentifierProperties {
                     ty: ty.clone(),
-                    // TODO: Check if parameter is a variable.
-                    variable: false,
+                    variable: *mutability == ast::Mutability::Var,
                 },
             );
         }
