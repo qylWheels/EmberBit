@@ -17,6 +17,12 @@ pub struct ImportDefinition {
     pub parts: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Visibility {
+    Public,
+    Private,
+}
+
 #[derive(Debug, Clone)]
 pub struct StructDefinition {
     pub name: String,
