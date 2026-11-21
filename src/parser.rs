@@ -84,7 +84,7 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
         ws!(separated(
             0..,
             (
-                ws!(parse_mutability),
+                parse_mutability,
                 space1,
                 ws!(parse_available_name),
                 ':',
