@@ -289,7 +289,7 @@ impl Interpreter {
                         let arg_names = func_ast
                             .params
                             .iter()
-                            .map(|x| x.0.clone())
+                            .map(|x| x.1.clone())
                             .collect::<Vec<_>>();
                         let mut newenv = env.clone();
                         for (name, arg) in arg_names.iter().zip(args) {
