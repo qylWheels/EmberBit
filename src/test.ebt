@@ -1,7 +1,14 @@
 struct Point {
     public x: i32;
     public y: i32;
+
     public distsquare: (const Point) i32;
+
+    public func distsquare2(const p: Point) i32 {
+        const x: i32 = p.x;
+        const y: i32 = p.y;
+        return x * x + y * y;
+    }
 }
 
 func main() i32 {
