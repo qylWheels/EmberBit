@@ -23,7 +23,7 @@ pub struct StructDefinition {
     pub fields: Vec<(String, Type)>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Mutability {
     Const,
     Var,
@@ -188,6 +188,6 @@ pub struct TupleType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FunctionType {
-    pub param_types: Vec<Type>,
+    pub params: Vec<(Mutability, Type)>,
     pub return_type: Box<Type>,
 }
