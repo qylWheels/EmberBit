@@ -12,6 +12,12 @@ macro_rules! ws {
     };
 }
 
+macro_rules! lws {
+    ($inner:expr) => {
+        preceded(multispace0, $inner)
+    };
+}
+
 pub fn parse_module<'a>(input: &mut &'a str) -> Result<ast::Module> {
     enum TopDefinition {
         Struct(ast::StructDefinition),
