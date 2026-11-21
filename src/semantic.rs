@@ -117,13 +117,12 @@ impl SemanticChecker {
     ) -> Result<ast::FunctionType> {
         let mut curr_ctx = ctx.clone();
 
-        // Check parameter types.
-        let annotated_param_types: Vec<Type> = ast
+        // Get parameter mutabilities.
+        let param_mutabilities = ast
             .params
             .iter()
-            .map(|(_, _, ty)| self.type_annotation_to_type(ty))
-            .collect::<Result<Vec<_>>>()?;
-        let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
+            .map(|(mutability, _, _)| mutability.clone())
+            .collect::<Vec<_>>();
 
         // Get parameter names.
         let param_names = ast
@@ -132,12 +131,13 @@ impl SemanticChecker {
             .map(|(_, name, _)| name.clone())
             .collect::<Vec<_>>();
 
-        // Get parameter mutabilities.
-        let param_mutabilities = ast
+        // Check parameter types.
+        let annotated_param_types: Vec<Type> = ast
             .params
             .iter()
-            .map(|(mutability, _, _)| mutability.clone())
-            .collect::<Vec<_>>();
+            .map(|(_, _, ty)| self.type_annotation_to_type(ty))
+            .collect::<Result<Vec<_>>>()?;
+        let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
 
         let param_iter = param_mutabilities
             .iter()
