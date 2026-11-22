@@ -28,6 +28,7 @@ pub struct Tuple {
 #[derive(Debug, Clone)]
 pub struct Struct {
     pub fields: HashMap<String, InnerMutableValueRef>,
+    pub methods: HashMap<String, InnerMutableValueRef>,
 }
 
 #[derive(Debug, Clone)]
@@ -316,8 +317,25 @@ impl Interpreter {
                     .zip(field_exprs.iter())
                     .map(|(name, expr)| (name.clone(), expr.clone()))
                     .collect::<HashMap<_, _>>();
-                let value =
-                    InnerMutableValueRef(Rc::new(RefCell::new(Value::Struct(Struct { fields }))));
+                let struct_def = self.struct_defs.get(&e.name).unwrap();
+                let methods = struct_def
+                    .methods
+                    .iter()
+                    .map(|(_, method)| {
+                        (
+                            method.name.clone(),
+                            InnerMutableValueRef(Rc::new(RefCell::new(Value::Function(
+                                Function {
+                                    ast: method as *const ast::FunctionDefinition,
+                                },
+                            )))),
+                        )
+                    })
+                    .collect();
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Struct(Struct {
+                    fields,
+                    methods,
+                }))));
                 self.values.insert(value.clone());
                 Ok(value)
             }
