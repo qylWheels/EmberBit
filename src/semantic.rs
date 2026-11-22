@@ -13,6 +13,7 @@ pub enum SemanticError {
     SliceType(String),
     ArgumentType(Vec<SemanticError>),
     Visibility(String),
+    DuplicateField(String),
 }
 
 pub type Result<T> = std::result::Result<T, SemanticError>;
@@ -117,7 +118,24 @@ impl SemanticChecker {
         Ok(())
     }
 
-    pub fn check_struct(&mut self, _ast: &ast::StructDefinition) -> Result<()> {
+    pub fn check_struct(&mut self, struct_def: &ast::StructDefinition) -> Result<()> {
+        // Check struct fields and methods.
+        // It is not allowed to use duplicate field/method names.
+        let mut names = HashSet::new();
+        for field in &struct_def.fields {
+            let field_name = field.1.clone();
+            if names.contains(&field_name) {
+                return Err(SemanticError::DuplicateField(field_name));
+            }
+            names.insert(field_name);
+        }
+        for method in &struct_def.methods {
+            let method_name = method.1.name.clone();
+            if names.contains(&method_name) {
+                return Err(SemanticError::DuplicateField(method_name));
+            }
+            names.insert(method_name);
+        }
         Ok(())
     }
 
