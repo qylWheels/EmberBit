@@ -1,4 +1,5 @@
 mod ast;
+mod desugaring;
 mod interpret;
 mod parser;
 mod semantic;
