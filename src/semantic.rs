@@ -266,20 +266,7 @@ impl SemanticChecker {
             }
             ast::Statement::VarDef(ast::VarDefStatement { name, ty, expr }) => {
                 // It is not allowed to create variable reference on not-assignable expression.
-                let expr_assignable = match expr {
-                    ast::Expression::Slice(ast::SliceExpression {
-                        base,
-                        start: _,
-                        end: _,
-                    }) => self.check_expression_assignable(base, ctx)?,
-                    ast::Expression::Index(ast::IndexExpression { base, index: _ }) => {
-                        self.check_expression_assignable(base, ctx)?
-                    }
-                    ast::Expression::Identifier(_) => {
-                        self.check_expression_assignable(expr, ctx)?
-                    }
-                    _ => true,
-                };
+                let expr_assignable = self.check_expression_assignable(expr, ctx)?;
                 if !expr_assignable {
                     return Err(SemanticError::Variable(
                         "Variable reference on non-assignable expression".into(),
