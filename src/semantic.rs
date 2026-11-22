@@ -658,35 +658,64 @@ impl SemanticChecker {
                     SemanticError::NoType(format!("Type {} is not defined", &struct_name))
                 })?;
 
-                // Check visibility of field.
-                let field_visibility = struct_def
+                // Check if field/method exists.
+                let field_exists = struct_def
                     .fields
                     .iter()
-                    .find(|(_, name, _)| name == &field.name)
-                    .ok_or(SemanticError::UnboundedIdentifier(format!(
-                        "Field {} is not defined",
-                        &field.name
-                    )))?
-                    .0;
-                // TODO: Allow accessing private fields in struct methods.
-                if field_visibility != Visibility::Public {
-                    return Err(SemanticError::Visibility(format!(
-                        "Field {} is private, for which accessing it by field access expression is not allowed",
-                        &field.name
+                    .any(|(_, name, _)| name == &field.name);
+                let method_exists = struct_def
+                    .methods
+                    .iter()
+                    .any(|(_, method_def)| &method_def.name == &field.name);
+                if !field_exists && !method_exists {
+                    return Err(SemanticError::UnboundedIdentifier(format!(
+                        "Field/method {} is not defined",
+                        field.name.clone()
                     )));
                 }
 
-                // Get field type.
-                let ty = struct_def
-                    .fields
-                    .iter()
-                    .find(|(_, name, _)| name == &field.name)
-                    .ok_or(SemanticError::UnboundedIdentifier(format!(
-                        "Field {} is not defined",
-                        &field.name
-                    )))?
-                    .2
-                    .clone();
+                // Determine type of field access expression.
+                let ty = if field_exists {
+                    // Get field definition.
+                    let (field_visibility, _field_name, field_type) = &struct_def
+                        .fields
+                        .iter()
+                        .find(|(_, name, _)| name == &field.name)
+                        .unwrap();
+
+                    // TODO: Allow accessing private fields in struct methods.
+                    if *field_visibility != Visibility::Public {
+                        return Err(SemanticError::Visibility(format!(
+                            "Field {} is private, for which accessing it by field access expression is not allowed",
+                            &field.name
+                        )));
+                    }
+
+                    // Get field type.
+                    let ty = field_type.clone();
+
+                    ty
+                } else {
+                    // Get method definition.
+                    let (method_visibility, method_def) = &struct_def
+                        .methods
+                        .iter()
+                        .find(|(_, method_def)| &method_def.name == &field.name)
+                        .unwrap();
+
+                    // TODO: Allow accessing private methods in struct methods.
+                    if *method_visibility != Visibility::Public {
+                        return Err(SemanticError::Visibility(format!(
+                            "Method {} is private, for which accessing it by field access expression is not allowed",
+                            &field.name
+                        )));
+                    }
+
+                    // Get method type.
+                    let ty = self.check_function(&method_def.clone(), ctx)?;
+
+                    Type::Function(ty)
+                };
 
                 // Store type of node.
                 self.type_of_node.insert(key, ty.clone());
