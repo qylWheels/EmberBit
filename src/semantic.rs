@@ -278,6 +278,9 @@ impl SemanticChecker {
                     ast::Expression::Identifier(_) => {
                         self.check_expression_assignable(expr, ctx)?
                     }
+                    ast::Expression::FieldAccess(_) => {
+                        self.check_expression_assignable(expr, ctx)?
+                    }
                     _ => true,
                 };
                 if !expr_assignable {
