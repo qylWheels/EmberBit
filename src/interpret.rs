@@ -325,9 +325,23 @@ impl Interpreter {
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
                 match &*base.0.borrow() {
                     Value::Struct(struct_val) => {
-                        let field_val = struct_val.fields.get(&e.field.name).unwrap();
-                        self.values.insert(field_val.clone());
-                        Ok(field_val.clone())
+                        // First try to find field in struct.
+                        match struct_val.fields.get(&e.field.name) {
+                            Some(val) => {
+                                self.values.insert(val.clone());
+                                return Ok(val.clone());
+                            }
+                            None => (),
+                        };
+
+                        // If field not found, we try to find it in methods.
+                        match struct_val.methods.get(&e.field.name) {
+                            Some(method) => {
+                                self.values.insert(method.clone());
+                                return Ok(method.clone());
+                            }
+                            None => unreachable!(),
+                        };
                     }
                     _ => unreachable!(),
                 }
