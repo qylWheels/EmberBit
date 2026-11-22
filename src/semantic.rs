@@ -136,6 +136,22 @@ impl SemanticChecker {
             }
             names.insert(method_name);
         }
+
+        // Check methods in struct.
+        for method in &struct_def.methods {
+            let mut ctx = HashMap::new();
+            for param in &method.1.params {
+                ctx.insert(
+                    param.1.clone(),
+                    IdentifierProperties {
+                        ty: param.2.clone(),
+                        variable: param.0 == ast::Mutability::Var,
+                    },
+                );
+            }
+            self.check_function(&method.1, &ctx)?;
+        }
+
         Ok(())
     }
 
