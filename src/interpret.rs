@@ -66,10 +66,7 @@ impl Eq for InnerMutableValueRef {}
 #[derive(Debug)]
 pub enum InterpretError {
     MissingMain,
-    TypeMismatch(&'static str),
-    UnknownBinaryOp,
     ReturnOutsideFunction,
-    UnknownExpression(&'static str),
 }
 
 pub type InterpretResult<T> = Result<T, InterpretError>;
