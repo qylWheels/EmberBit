@@ -213,11 +213,11 @@ impl Interpreter {
                 let rhs = self.interpret_expression(e.rhs.as_ref(), env)?;
                 let lhs_int = match *lhs.0.borrow() {
                     Value::Int(n) => n,
-                    _ => return Err(InterpretError::TypeMismatch("binary lhs must be int")),
+                    _ => unreachable!(),
                 };
                 let rhs_int = match *rhs.0.borrow() {
                     Value::Int(n) => n,
-                    _ => return Err(InterpretError::TypeMismatch("binary rhs must be int")),
+                    _ => unreachable!(),
                 };
                 let result = match e.op {
                     ast::BinaryOp::Add => lhs_int + rhs_int,
