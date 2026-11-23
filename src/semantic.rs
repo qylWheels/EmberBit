@@ -447,6 +447,34 @@ impl SemanticChecker {
         }
     }
 
+    fn is_method_of_struct(
+        &mut self,
+        expr: &ast::Expression,
+        ctx: &HashMap<String, IdentifierProperties>,
+    ) -> Result<bool> {
+        match expr {
+            ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
+                let base_type = self.check_expression(base, ctx)?;
+                let struct_type = match &base_type {
+                    Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
+                        SemanticError::IncompatibleType(
+                            "Field access expression has non-struct type".into(),
+                        ),
+                    )?,
+                    _ => Err(SemanticError::IncompatibleType(
+                        "Field access expression has non-struct type".into(),
+                    ))?,
+                };
+                let method = struct_type
+                    .methods
+                    .iter()
+                    .find(|(_, func_def)| func_def.name == field.name);
+                Ok(method.is_some())
+            }
+            _ => Ok(false),
+        }
+    }
+
     pub fn check_expression(
         &mut self,
         ast: &ast::Expression,
