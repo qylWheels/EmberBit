@@ -367,8 +367,8 @@ impl SemanticChecker {
                 }
                 Ok(ctx.clone())
             }
-            ast::Statement::Return(ast::ReturnStatement { expr }) => {
-                let _ = self.check_expression(expr, ctx)?;
+            ast::Statement::Return(ast::ReturnStatement { expr: _ }) => {
+                // Return statement should be checked in check_function.
                 Ok(ctx.clone())
             }
             ast::Statement::Expression(ast::ExpressionStatement { expr }) => {
