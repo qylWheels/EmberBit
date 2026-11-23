@@ -23,6 +23,7 @@ type TrivialType = ast::TrivialType;
 type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
+type FunctionType = ast::FunctionType;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FunctionTypeVariant {
     Normal,
