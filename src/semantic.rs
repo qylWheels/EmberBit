@@ -149,10 +149,18 @@ impl SemanticChecker {
                     },
                 );
             }
-            self.check_function(&method.1, &ctx)?;
+            self.check_method(&method.1, &ctx)?;
         }
 
         Ok(())
+    }
+
+    pub fn check_method(
+        &mut self,
+        method: &ast::FunctionDefinition,
+        ctx: &HashMap<String, IdentifierProperties>,
+    ) -> Result<ast::FunctionType> {
+        Ok(self.check_function(method, ctx)?)
     }
 
     pub fn check_function(
