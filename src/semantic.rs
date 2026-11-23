@@ -23,7 +23,7 @@ type TrivialType = ast::TrivialType;
 type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
-enum FunctionType {
+enum FunctionTypeVariant {
     Normal(ast::FunctionType),
     Method(ast::FunctionType),
     Associated(ast::FunctionType),
@@ -261,7 +261,7 @@ impl SemanticChecker {
             )));
         }
 
-        let ty = FunctionType {
+        let ty = FunctionTypeVariant {
             params: params
                 .iter()
                 .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
