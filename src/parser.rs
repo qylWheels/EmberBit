@@ -354,9 +354,11 @@ fn parse_id_and_expr<'a>(input: &mut &'a str) -> Result<(String, ast::Expression
 fn parse_available_name<'a>(input: &mut &'a str) -> Result<String> {
     (
         one_of(('a'..='z', 'A'..='Z', '_')),
-        alt((alphanumeric0, "_")),
+        repeat(0.., one_of(('a'..='z', 'A'..='Z', '0'..='9', '_'))),
     )
-        .map(|(first, rest)| format!("{}{}", first, rest))
+        .map(|(first, rest): (char, Vec<char>)| {
+            format!("{}{}", first, rest.iter().collect::<String>())
+        })
         .parse_next(input)
 }
 
