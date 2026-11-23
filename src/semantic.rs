@@ -141,6 +141,16 @@ impl SemanticChecker {
         for method in &struct_def.methods {
             let mut ctx = HashMap::new();
             for param in &method.1.params {
+                // Desugar `Self` to struct type.
+                if let Type::Trivial(TrivialType { name }) = &param.2
+                    && name == "Self"
+                {
+                    param.2 = Type::Trivial(TrivialType {
+                        name: struct_def.name.clone(),
+                    });
+                }
+
+                // Add parameter to context.
                 ctx.insert(
                     param.1.clone(),
                     IdentifierProperties {
@@ -149,7 +159,8 @@ impl SemanticChecker {
                     },
                 );
             }
-            self.check_method(&method.1, &ctx)?;
+
+            self.check_function(&method.1, &ctx)?;
         }
 
         Ok(())
