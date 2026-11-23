@@ -35,6 +35,7 @@ type Visibility = ast::Visibility;
 pub struct IdentifierProperties {
     pub ty: Type,
     pub variable: bool,
+    pub func_type: Option<FunctionTypeVariant>,
 }
 
 pub struct SemanticChecker {
