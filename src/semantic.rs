@@ -477,7 +477,7 @@ impl SemanticChecker {
 
     pub fn check_expression(
         &mut self,
-        ast: &ast::Expression,
+        ast: &mut ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<Type> {
         let key = ast as *const ast::Expression as usize;
@@ -607,6 +607,19 @@ impl SemanticChecker {
                 let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
                     Type::Function(func_type) => {
+                        // If callee is method of struct, desugar it.
+                        if self.is_method_of_struct(callee, ctx)? {
+                            match &**callee {
+                                ast::Expression::FieldAccess(ast::FieldAccessExpression {
+                                    base,
+                                    field,
+                                }) => {
+                                    args.insert(0, (**base).clone());
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+
                         // Infer parameter types.
                         let actual_param_types = args
                             .iter()
