@@ -85,12 +85,20 @@ impl SemanticChecker {
 
         // Desugar methods.
         for method in &mut struct_def.methods {
+            // Desugar method parameters.
             for param in &mut method.1.params {
                 if let Type::Trivial(TrivialType { name }) = &param.2
                     && name == "Self"
                 {
                     param.2 = target_type.clone();
                 }
+            }
+
+            // Desugar method return type.
+            if let Type::Trivial(TrivialType { name }) = &method.1.return_type
+                && name == "Self"
+            {
+                method.1.return_type = target_type.clone();
             }
         }
     }
