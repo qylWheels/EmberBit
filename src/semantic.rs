@@ -24,9 +24,9 @@ type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
 enum FunctionTypeVariant {
-    Normal(ast::FunctionType),
-    Method(ast::FunctionType),
-    Associated(ast::FunctionType),
+    Normal,
+    Method,
+    Associated,
 }
 type Visibility = ast::Visibility;
 
