@@ -40,6 +40,7 @@ pub struct IdentifierProperties {
 }
 
 struct Scope {
+    pub name: String,
     pub identifiers: HashMap<String, IdentifierProperties>,
     pub children: Vec<Scope>,
 }
@@ -67,6 +68,7 @@ impl SemanticChecker {
             type_of_node: HashMap::new(),
             struct_type_info: HashMap::new(),
             root_scope: Scope {
+                name: "<anonymous>".to_string(),
                 identifiers: HashMap::new(),
                 children: vec![],
             },
