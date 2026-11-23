@@ -39,6 +39,11 @@ pub struct IdentifierProperties {
     pub func_type: Option<FunctionTypeVariant>,
 }
 
+struct Scope {
+    pub identifiers: HashMap<String, IdentifierProperties>,
+    pub children: Vec<Scope>,
+}
+
 pub struct SemanticChecker {
     /// usize: address of AST node
     type_of_node: HashMap<usize, Type>,
