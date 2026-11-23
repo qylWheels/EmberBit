@@ -39,21 +39,12 @@ pub struct IdentifierProperties {
     pub func_type: Option<FunctionTypeVariant>,
 }
 
-struct Scope {
-    pub name: String,
-    pub identifiers: HashMap<String, IdentifierProperties>,
-    pub children: Vec<Scope>,
-}
-
 pub struct SemanticChecker {
     /// usize: address of AST node
     type_of_node: HashMap<usize, Type>,
 
     /// Struct type information.
     struct_type_info: HashMap<String, ast::StructDefinition>,
-
-    /// Root scope.
-    root_scope: Scope,
 }
 
 impl Default for SemanticChecker {
@@ -67,11 +58,6 @@ impl SemanticChecker {
         Self {
             type_of_node: HashMap::new(),
             struct_type_info: HashMap::new(),
-            root_scope: Scope {
-                name: "<anonymous>".to_string(),
-                identifiers: HashMap::new(),
-                children: vec![],
-            },
         }
     }
 
