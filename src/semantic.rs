@@ -23,7 +23,11 @@ type TrivialType = ast::TrivialType;
 type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
-type FunctionType = ast::FunctionType;
+enum FunctionType {
+    Normal(ast::FunctionType),
+    Method(ast::FunctionType),
+    Associated(ast::FunctionType),
+}
 type Visibility = ast::Visibility;
 
 #[derive(Debug, Clone)]
