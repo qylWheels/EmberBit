@@ -62,7 +62,7 @@ impl SemanticChecker {
         Ok(type_annotation.clone())
     }
 
-    pub fn check_module(&mut self, ast: &ast::Module) -> Result<()> {
+    pub fn check_module(&mut self, ast: &mut ast::Module) -> Result<()> {
         // Collect all top definitions into context first.
         let mut ctx = HashMap::new();
         for topdef in &ast.top_definitions {
@@ -102,7 +102,7 @@ impl SemanticChecker {
             }
         }
 
-        for topdef in &ast.top_definitions {
+        for topdef in &mut ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(i) => self.check_import(i)?,
                 ast::TopDefinition::Struct(s) => self.check_struct(s)?,
@@ -118,7 +118,7 @@ impl SemanticChecker {
         Ok(())
     }
 
-    pub fn check_struct(&mut self, struct_def: &ast::StructDefinition) -> Result<()> {
+    pub fn check_struct(&mut self, struct_def: &mut ast::StructDefinition) -> Result<()> {
         // Check struct fields and methods.
         // It is not allowed to use duplicate field/method names.
         let mut names = HashSet::new();
@@ -138,9 +138,9 @@ impl SemanticChecker {
         }
 
         // Check methods in struct.
-        for method in &struct_def.methods {
+        for method in &mut struct_def.methods {
             let mut ctx = HashMap::new();
-            for param in &method.1.params {
+            for param in &mut method.1.params {
                 // Desugar `Self` to struct type.
                 if let Type::Trivial(TrivialType { name }) = &param.2
                     && name == "Self"
