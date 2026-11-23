@@ -50,6 +50,9 @@ pub struct SemanticChecker {
 
     /// Struct type information.
     struct_type_info: HashMap<String, ast::StructDefinition>,
+
+    /// Root scope.
+    root_scope: Scope,
 }
 
 impl Default for SemanticChecker {
@@ -63,6 +66,10 @@ impl SemanticChecker {
         Self {
             type_of_node: HashMap::new(),
             struct_type_info: HashMap::new(),
+            root_scope: Scope {
+                identifiers: HashMap::new(),
+                children: vec![],
+            },
         }
     }
 
