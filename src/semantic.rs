@@ -91,10 +91,14 @@ impl SemanticChecker {
     pub fn check_module(&mut self, ast: &mut ast::Module) -> Result<()> {
         // Collect all top definitions into context first.
         let mut ctx = HashMap::new();
-        for topdef in &ast.top_definitions {
+        for topdef in &mut ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_i) => {}
                 ast::TopDefinition::Struct(s) => {
+                    // Desugar all `Self` occurrences to struct type.
+                    self.desugar_self_type_in_struct_def(s);
+
+                    // Insert struct type into context.
                     self.struct_type_info.insert(s.name.clone(), s.clone());
                 }
                 ast::TopDefinition::Function(f) => {
