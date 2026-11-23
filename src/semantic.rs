@@ -24,19 +24,12 @@ type ArrayType = ast::ArrayType;
 type ConstSliceType = ast::SliceType;
 type TupleType = ast::TupleType;
 type FunctionType = ast::FunctionType;
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum FunctionTypeVariant {
-    Normal,
-    Method,
-    Associated,
-}
 type Visibility = ast::Visibility;
 
 #[derive(Debug, Clone)]
 pub struct IdentifierProperties {
     pub ty: Type,
     pub variable: bool,
-    pub func_type: Option<FunctionTypeVariant>,
 }
 
 pub struct SemanticChecker {
@@ -141,7 +134,6 @@ impl SemanticChecker {
                         IdentifierProperties {
                             ty: func_type.clone(),
                             variable: false,
-                            func_type: Some(FunctionTypeVariant::Normal),
                         },
                     );
                 }
@@ -193,7 +185,6 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: param.2.clone(),
                         variable: param.0 == ast::Mutability::Var,
-                        func_type: None,
                     },
                 );
             }
@@ -247,7 +238,6 @@ impl SemanticChecker {
                 IdentifierProperties {
                     ty: ty.clone(),
                     variable: *mutability == ast::Mutability::Var,
-                    func_type: None,
                 },
             );
         }
@@ -310,7 +300,6 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: expr_type,
                         variable: false,
-                        func_type: None,
                     },
                 );
                 Ok(new_ctx)
@@ -354,7 +343,6 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: expr_type,
                         variable: true,
-                        func_type: None,
                     },
                 );
                 Ok(new_ctx)
