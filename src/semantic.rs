@@ -176,7 +176,7 @@ impl SemanticChecker {
         }
 
         // Check methods in struct.
-        for method in &struct_def.methods {
+        for method in &mut struct_def.methods {
             let mut ctx = HashMap::new();
             for param in &method.1.params {
                 // Add parameter to context.
@@ -190,7 +190,7 @@ impl SemanticChecker {
                 );
             }
 
-            self.check_function(&method.1, &ctx)?;
+            self.check_function(&mut method.1, &ctx)?;
         }
 
         Ok(())
@@ -198,7 +198,7 @@ impl SemanticChecker {
 
     pub fn check_function(
         &mut self,
-        ast: &ast::FunctionDefinition,
+        ast: &mut ast::FunctionDefinition,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<ast::FunctionType> {
         let mut curr_ctx = ctx.clone();
@@ -244,13 +244,13 @@ impl SemanticChecker {
             );
         }
 
-        for stmt in &ast.body {
+        for stmt in &mut ast.body {
             curr_ctx = self.check_statement(stmt, &curr_ctx)?;
         }
 
         let last_stmt = ast
             .body
-            .last()
+            .last_mut()
             .ok_or_else(|| SemanticError::IncompatibleType("Empty function body".into()))?;
 
         let actual_return_type =
@@ -283,7 +283,7 @@ impl SemanticChecker {
 
     pub fn check_statement(
         &mut self,
-        ast: &ast::Statement,
+        ast: &mut ast::Statement,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<HashMap<String, IdentifierProperties>> {
         match ast {
@@ -380,7 +380,7 @@ impl SemanticChecker {
 
     pub fn check_expression_assignable(
         &mut self,
-        ast: &ast::Expression,
+        ast: &mut ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<bool> {
         match ast {
@@ -449,7 +449,7 @@ impl SemanticChecker {
 
     fn is_method_of_struct(
         &mut self,
-        expr: &ast::Expression,
+        expr: &mut ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
     ) -> Result<bool> {
         match expr {
@@ -484,7 +484,7 @@ impl SemanticChecker {
         match ast {
             ast::Expression::Array(ast::ArrayExpression { elements }) => {
                 let types = elements
-                    .iter()
+                    .iter_mut()
                     .map(|e| self.check_expression(e, ctx))
                     .collect::<Result<Vec<_>>>()?;
                 if types.is_empty() {
@@ -507,7 +507,7 @@ impl SemanticChecker {
             }
             ast::Expression::Tuple(ast::TupleExpression { elements }) => {
                 let types = elements
-                    .iter()
+                    .iter_mut()
                     .map(|e| self.check_expression(e, ctx))
                     .collect::<Result<Vec<_>>>()?;
                 let ty = Type::Tuple(ast::TupleType { elem_types: types });
@@ -622,7 +622,7 @@ impl SemanticChecker {
 
                         // Infer parameter types.
                         let actual_param_types = args
-                            .iter()
+                            .iter_mut()
                             .map(|arg| self.check_expression(arg, ctx))
                             .collect::<Result<Vec<_>>>()?;
 
@@ -642,7 +642,7 @@ impl SemanticChecker {
                             .map(|(mutability, _)| *mutability == ast::Mutability::Var)
                             .collect::<Vec<_>>();
                         let param_mutabilities = args
-                            .iter()
+                            .iter_mut()
                             .map(|arg| self.check_expression_assignable(arg, ctx))
                             .collect::<Result<Vec<_>>>()?;
                         for i in 0..annotated_mutabilities.len() {
@@ -699,7 +699,7 @@ impl SemanticChecker {
 
                 // Infer type of each field expression.
                 let field_types = fields
-                    .iter()
+                    .iter_mut()
                     .map(|(_, expr)| self.check_expression(expr, ctx))
                     .collect::<Result<Vec<_>>>()?;
 
@@ -797,7 +797,7 @@ impl SemanticChecker {
                     }
 
                     // Get method type.
-                    let ty = self.check_function(&method_def.clone(), ctx)?;
+                    let ty = self.check_function(&mut method_def.clone(), ctx)?;
 
                     Type::Function(ty)
                 };
