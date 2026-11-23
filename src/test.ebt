@@ -2,9 +2,9 @@ struct Point {
     public x: i32;
     public y: i32;
 
-    public func distsquare(const p: Point) i32 {
-        const x: i32 = p.x;
-        const y: i32 = p.y;
+    public func distsquare(const self: Self) i32 {
+        const x: i32 = self.x;
+        const y: i32 = self.y;
         return x * x + y * y;
     }
 
