@@ -120,7 +120,7 @@ impl SemanticChecker {
                         .map(|(_, _, ty)| self.type_annotation_to_type(ty))
                         .collect::<Result<Vec<_>>>()?;
                     let annotated_return_type = self.type_annotation_to_type(&f.return_type)?;
-                    let func_type = Type::Function(FunctionType {
+                    let func_type = Type::Function(ast::FunctionType {
                         params: param_mutabilities
                             .iter()
                             .zip(annotated_param_types.iter())
@@ -133,6 +133,7 @@ impl SemanticChecker {
                         IdentifierProperties {
                             ty: func_type.clone(),
                             variable: false,
+                            func_type: Some(FunctionTypeVariant::Normal),
                         },
                     );
                 }
@@ -184,6 +185,7 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: param.2.clone(),
                         variable: param.0 == ast::Mutability::Var,
+                        func_type: None,
                     },
                 );
             }
@@ -237,6 +239,7 @@ impl SemanticChecker {
                 IdentifierProperties {
                     ty: ty.clone(),
                     variable: *mutability == ast::Mutability::Var,
+                    func_type: None,
                 },
             );
         }
@@ -264,7 +267,7 @@ impl SemanticChecker {
             )));
         }
 
-        let ty = FunctionTypeVariant {
+        let ty = FunctionType {
             params: params
                 .iter()
                 .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
@@ -299,6 +302,7 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: expr_type,
                         variable: false,
+                        func_type: None,
                     },
                 );
                 Ok(new_ctx)
@@ -342,6 +346,7 @@ impl SemanticChecker {
                     IdentifierProperties {
                         ty: expr_type,
                         variable: true,
+                        func_type: None,
                     },
                 );
                 Ok(new_ctx)
