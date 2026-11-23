@@ -155,14 +155,6 @@ impl SemanticChecker {
         Ok(())
     }
 
-    pub fn check_method(
-        &mut self,
-        method: &ast::FunctionDefinition,
-        ctx: &HashMap<String, IdentifierProperties>,
-    ) -> Result<ast::FunctionType> {
-        Ok(self.check_function(method, ctx)?)
-    }
-
     pub fn check_function(
         &mut self,
         ast: &ast::FunctionDefinition,
