@@ -36,7 +36,7 @@ pub struct StructDefinition {
 pub struct FunctionDefinition {
     pub name: String,
     pub params: Vec<(Mutability, String, Type)>,
-    pub return_type: Type,
+    pub return_type: (Mutability, Type),
     pub body: Vec<Statement>,
 }
 
