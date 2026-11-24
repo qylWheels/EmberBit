@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::types;
 
 use winnow::Parser;
 use winnow::Result;
@@ -86,7 +87,7 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
             ),
             ','
         ))
-        .map(|args: Vec<(ast::Mutability, String, _, ast::Type)>| {
+        .map(|args: Vec<(types::Mutability, String, _, types::Type)>| {
             args.iter()
                 .map(|(mutability, id, _, ty)| (mutability.clone(), id.clone(), ty.clone()))
                 .collect::<Vec<_>>()
@@ -169,9 +170,9 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     .parse_next(input)
 }
 
-fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
+fn parse_type<'a>(input: &mut &'a str) -> Result<types::Type> {
     let parse_trivial_type =
-        parse_available_name.map(|s: String| ast::Type::Trivial(ast::TrivialType { name: s }));
+        parse_available_name.map(|s: String| types::Type::Trivial(types::TrivialType { name: s }));
     let parse_function_type = (
         '(',
         ws!(separated(
@@ -185,15 +186,15 @@ fn parse_type<'a>(input: &mut &'a str) -> Result<ast::Type> {
         .map(
             |(_, params, _, return_type): (
                 _,
-                Vec<(ast::Mutability, _, ast::Type)>,
+                Vec<(types::Mutability, _, types::Type)>,
                 _,
-                ast::Type,
+                types::Type,
             )| {
                 let param_mutabilities_and_types = params
                     .iter()
                     .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
                     .collect::<Vec<_>>();
-                ast::Type::Function(ast::FunctionType {
+                types::Type::Function(types::FunctionType {
                     params: param_mutabilities_and_types,
                     return_type: Box::new(return_type),
                 })
@@ -339,7 +340,7 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 // TODO: Use this instead of implementing it manually.
-fn parse_id_and_type<'a>(input: &mut &'a str) -> Result<(String, ast::Type)> {
+fn parse_id_and_type<'a>(input: &mut &'a str) -> Result<(String, types::Type)> {
     (ws!(parse_available_name), ':', ws!(parse_type))
         .map(|(name, _, ty)| (name, ty))
         .parse_next(input)
@@ -372,11 +373,11 @@ fn parse_visibility<'a>(input: &mut &'a str) -> Result<ast::Visibility> {
         .parse_next(input)
 }
 
-fn parse_mutability<'a>(input: &mut &'a str) -> Result<ast::Mutability> {
+fn parse_mutability<'a>(input: &mut &'a str) -> Result<types::Mutability> {
     alt(("const", "var"))
         .map(|s| match s {
-            "const" => ast::Mutability::Const,
-            "var" => ast::Mutability::Var,
+            "const" => types::Mutability::Const,
+            "var" => types::Mutability::Var,
             _ => panic!("Expect \"const\" or \"var\", but got {:?}", s),
         })
         .parse_next(input)
