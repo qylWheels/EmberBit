@@ -27,6 +27,7 @@ pub struct IdentifierProperties {
     pub variable: bool,
 }
 
+#[derive(Debug)]
 pub struct SemanticChecker {
     /// usize: address of AST node
     type_of_node: HashMap<usize, types::Type>,
