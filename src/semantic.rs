@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::types;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
@@ -18,23 +19,17 @@ pub enum SemanticError {
 
 pub type Result<T> = std::result::Result<T, SemanticError>;
 
-type Type = ast::Type;
-type TrivialType = ast::TrivialType;
-type ArrayType = ast::ArrayType;
-type ConstSliceType = ast::SliceType;
-type TupleType = ast::TupleType;
-type FunctionType = ast::FunctionType;
 type Visibility = ast::Visibility;
 
 #[derive(Debug, Clone)]
 pub struct IdentifierProperties {
-    pub ty: Type,
+    pub ty: types::Type,
     pub variable: bool,
 }
 
 pub struct SemanticChecker {
     /// usize: address of AST node
-    type_of_node: HashMap<usize, Type>,
+    type_of_node: HashMap<usize, types::Type>,
 
     /// Struct type information.
     struct_type_info: HashMap<String, ast::StructDefinition>,
@@ -54,22 +49,22 @@ impl SemanticChecker {
         }
     }
 
-    pub fn get_type_of_node<T>(&self, node: &T) -> Option<&Type> {
+    pub fn get_type_of_node<T>(&self, node: &T) -> Option<&types::Type> {
         self.type_of_node.get(&(node as *const T as usize))
     }
 
-    pub fn type_annotation_to_type(&self, type_annotation: &ast::Type) -> Result<Type> {
+    pub fn type_annotation_to_type(&self, type_annotation: &types::Type) -> Result<types::Type> {
         Ok(type_annotation.clone())
     }
 
     fn desugar_self_type_in_struct_def(&mut self, struct_def: &mut ast::StructDefinition) {
-        let target_type = Type::Trivial(TrivialType {
+        let target_type = types::Type::Trivial(types::TrivialType {
             name: struct_def.name.clone(),
         });
 
         // Desugar fields.
         for field in &mut struct_def.fields {
-            if let Type::Trivial(TrivialType { name }) = &field.2
+            if let types::Type::Trivial(types::TrivialType { name }) = &field.2
                 && name == "Self"
             {
                 field.2 = target_type.clone();
@@ -80,7 +75,7 @@ impl SemanticChecker {
         for method in &mut struct_def.methods {
             // Desugar method parameters.
             for param in &mut method.1.params {
-                if let Type::Trivial(TrivialType { name }) = &param.2
+                if let types::Type::Trivial(types::TrivialType { name }) = &param.2
                     && name == "Self"
                 {
                     param.2 = target_type.clone();
@@ -88,7 +83,7 @@ impl SemanticChecker {
             }
 
             // Desugar method return type.
-            if let Type::Trivial(TrivialType { name }) = &method.1.return_type
+            if let types::Type::Trivial(types::TrivialType { name }) = &method.1.return_type
                 && name == "Self"
             {
                 method.1.return_type = target_type.clone();
@@ -115,13 +110,13 @@ impl SemanticChecker {
                         .iter()
                         .map(|(mutability, _, _)| mutability.clone())
                         .collect::<Vec<_>>();
-                    let annotated_param_types: Vec<Type> = f
+                    let annotated_param_types: Vec<types::Type> = f
                         .params
                         .iter()
                         .map(|(_, _, ty)| self.type_annotation_to_type(ty))
                         .collect::<Result<Vec<_>>>()?;
                     let annotated_return_type = self.type_annotation_to_type(&f.return_type)?;
-                    let func_type = Type::Function(ast::FunctionType {
+                    let func_type = types::Type::Function(types::FunctionType {
                         params: param_mutabilities
                             .iter()
                             .zip(annotated_param_types.iter())
@@ -184,7 +179,7 @@ impl SemanticChecker {
                     param.1.clone(),
                     IdentifierProperties {
                         ty: param.2.clone(),
-                        variable: param.0 == ast::Mutability::Var,
+                        variable: param.0 == types::Mutability::Var,
                     },
                 );
             }
@@ -199,7 +194,7 @@ impl SemanticChecker {
         &mut self,
         ast: &mut ast::FunctionDefinition,
         ctx: &HashMap<String, IdentifierProperties>,
-    ) -> Result<ast::FunctionType> {
+    ) -> Result<types::FunctionType> {
         let mut curr_ctx = ctx.clone();
 
         // Get parameter mutabilities.
@@ -217,7 +212,7 @@ impl SemanticChecker {
             .collect::<Vec<_>>();
 
         // Check parameter types.
-        let annotated_param_types: Vec<Type> = ast
+        let annotated_param_types: Vec<types::Type> = ast
             .params
             .iter()
             .map(|(_, _, ty)| self.type_annotation_to_type(ty))
@@ -237,7 +232,7 @@ impl SemanticChecker {
                 name.clone(),
                 IdentifierProperties {
                     ty: ty.clone(),
-                    variable: *mutability == ast::Mutability::Var,
+                    variable: *mutability == types::Mutability::Var,
                 },
             );
         }
@@ -255,7 +250,7 @@ impl SemanticChecker {
             if let ast::Statement::Return(ast::ReturnStatement { expr }) = last_stmt {
                 self.check_expression(expr, &curr_ctx)?
             } else {
-                Type::Tuple(ast::TupleType { elem_types: vec![] })
+                types::Type::Tuple(types::TupleType { elem_types: vec![] })
             };
 
         if annotated_return_type != actual_return_type {
@@ -265,7 +260,7 @@ impl SemanticChecker {
             )));
         }
 
-        let ty = FunctionType {
+        let ty = types::FunctionType {
             params: params
                 .iter()
                 .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
@@ -274,7 +269,7 @@ impl SemanticChecker {
         };
         self.type_of_node.insert(
             ast as *const ast::FunctionDefinition as usize,
-            Type::Function(ty.clone()),
+            types::Type::Function(ty.clone()),
         );
         Ok(ty)
     }
@@ -390,7 +385,7 @@ impl SemanticChecker {
             ast::Expression::Index(ast::IndexExpression { base, .. }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let variable = match base_type {
-                    Type::Array(_) | Type::Slice(_) => {
+                    types::Type::Array(_) | types::Type::Slice(_) => {
                         self.check_expression_assignable(base, ctx)?
                     }
                     _ => false,
@@ -407,7 +402,7 @@ impl SemanticChecker {
 
                 // Get struct actual type.
                 let struct_type = match &base_type {
-                    Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
+                    types::Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
                         SemanticError::IncompatibleType(
                             "Field access expression has non-struct type".into(),
                         ),
@@ -452,7 +447,7 @@ impl SemanticChecker {
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let struct_type = match &base_type {
-                    Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
+                    types::Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
                         SemanticError::IncompatibleType(
                             "Field access expression has non-struct type".into(),
                         ),
@@ -475,7 +470,7 @@ impl SemanticChecker {
         &mut self,
         ast: &mut ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
-    ) -> Result<Type> {
+    ) -> Result<types::Type> {
         let key = ast as *const ast::Expression as usize;
         match ast {
             ast::Expression::Array(ast::ArrayExpression { elements }) => {
@@ -488,13 +483,13 @@ impl SemanticChecker {
                         "Array isn't allowed to be empty".into(),
                     ));
                 }
-                let type_set: HashSet<&Type> = types.iter().collect();
+                let type_set: HashSet<&types::Type> = types.iter().collect();
                 if type_set.len() > 1 {
                     return Err(SemanticError::ArrayElemType(
                         "Array expression has elements of different types".into(),
                     ));
                 }
-                let ty = Type::Array(ast::ArrayType {
+                let ty = types::Type::Array(types::ArrayType {
                     elem_type: Box::new(types[0].clone()),
                     size: elements.len() as i64,
                 });
@@ -506,15 +501,15 @@ impl SemanticChecker {
                     .iter_mut()
                     .map(|e| self.check_expression(e, ctx))
                     .collect::<Result<Vec<_>>>()?;
-                let ty = Type::Tuple(ast::TupleType { elem_types: types });
+                let ty = types::Type::Tuple(types::TupleType { elem_types: types });
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
             ast::Expression::Index(ast::IndexExpression { base, index }) => {
                 let base_type = self.check_expression(base, ctx)?;
                 let elem_type = match base_type {
-                    Type::Array(ast::ArrayType { elem_type, .. }) => *elem_type,
-                    Type::Slice(ast::SliceType { elem_type, .. }) => *elem_type,
+                    types::Type::Array(types::ArrayType { elem_type, .. }) => *elem_type,
+                    types::Type::Slice(types::SliceType { elem_type, .. }) => *elem_type,
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
                             "Base expression must be of type Array or Slice, but {:?} is given",
@@ -523,7 +518,7 @@ impl SemanticChecker {
                     }
                 };
                 let index_type = self.check_expression(index, ctx)?;
-                if !matches!(&index_type, Type::Trivial(ast::TrivialType { name }) if name == "i32")
+                if !matches!(&index_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
                 {
                     return Err(SemanticError::IndexType(format!(
                         "Index must be of type i32, but {:?} is given",
@@ -539,7 +534,9 @@ impl SemanticChecker {
                 let end_type = self.check_expression(end, ctx)?;
 
                 let elem_type = match &base_type {
-                    Type::Array(ast::ArrayType { elem_type, .. }) => elem_type.as_ref().clone(),
+                    types::Type::Array(types::ArrayType { elem_type, .. }) => {
+                        elem_type.as_ref().clone()
+                    }
                     other => {
                         return Err(SemanticError::SliceType(format!(
                             "Slice base must be of type ArrayType, but {:?} is given",
@@ -548,21 +545,22 @@ impl SemanticChecker {
                     }
                 };
 
-                if !matches!(&start_type, Type::Trivial(ast::TrivialType { name }) if name == "i32")
+                if !matches!(&start_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
                 {
                     return Err(SemanticError::SliceType(format!(
                         "Slice start must be of type i32, but {:?} is given",
                         start_type
                     )));
                 }
-                if !matches!(&end_type, Type::Trivial(ast::TrivialType { name }) if name == "i32") {
+                if !matches!(&end_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
+                {
                     return Err(SemanticError::SliceType(format!(
                         "Slice end must be of type i32, but {:?} is given",
                         end_type
                     )));
                 }
 
-                let ty = Type::Slice(ast::SliceType {
+                let ty = types::Type::Slice(types::SliceType {
                     elem_type: Box::new(elem_type),
                 });
 
@@ -582,7 +580,7 @@ impl SemanticChecker {
                 Ok(lhs_type)
             }
             ast::Expression::Integer(ast::IntegerLiteral { value: _ }) => {
-                let ty = Type::Trivial(ast::TrivialType {
+                let ty = types::Type::Trivial(types::TrivialType {
                     name: "i32".to_string(),
                 });
                 self.type_of_node.insert(key, ty.clone());
@@ -602,7 +600,7 @@ impl SemanticChecker {
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
                 let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
-                    Type::Function(func_type) => {
+                    types::Type::Function(func_type) => {
                         // If callee is method of struct, desugar it.
                         if self.is_method_of_struct(callee, ctx)? {
                             match &**callee {
@@ -635,7 +633,7 @@ impl SemanticChecker {
                         let annotated_mutabilities = func_type
                             .params
                             .iter()
-                            .map(|(mutability, _)| *mutability == ast::Mutability::Var)
+                            .map(|(mutability, _)| *mutability == types::Mutability::Var)
                             .collect::<Vec<_>>();
                         let param_mutabilities = args
                             .iter_mut()
@@ -719,7 +717,7 @@ impl SemanticChecker {
                     }
                 }
 
-                let ty = Type::Trivial(TrivialType { name: struct_name });
+                let ty = types::Type::Trivial(types::TrivialType { name: struct_name });
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
@@ -727,7 +725,7 @@ impl SemanticChecker {
                 // Check type of base expression.
                 let base_type = self.check_expression(base, ctx)?;
                 let struct_name = match base_type {
-                    Type::Trivial(TrivialType { name }) => name,
+                    types::Type::Trivial(types::TrivialType { name }) => name,
                     _ => Err(SemanticError::IncompatibleType(format!(
                         "Base expression must be of type struct, but {:?} is given",
                         base_type
@@ -795,7 +793,7 @@ impl SemanticChecker {
                     // Get method type.
                     let ty = self.check_function(&mut method_def.clone(), ctx)?;
 
-                    Type::Function(ty)
+                    types::Type::Function(ty)
                 };
 
                 // Store type of node.
