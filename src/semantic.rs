@@ -144,6 +144,7 @@ impl SemanticChecker {
         &mut self,
         ast: &ast::FunctionDefinition,
         ctx: &HashMap<String, IdentifierProperties>,
+        struct_name: Option<&str>,
     ) -> Result<types::FunctionType> {
         let mut curr_ctx = ctx.clone();
 
@@ -165,7 +166,20 @@ impl SemanticChecker {
         let annotated_param_types: Vec<types::Type> = ast
             .params
             .iter()
-            .map(|(_, _, ty)| self.type_annotation_to_type(ty))
+            .map(|(_, _, ty)| {
+                if struct_name.is_some() {
+                    match ty {
+                        types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
+                            Ok(types::Type::Trivial(types::TrivialType {
+                                name: struct_name.unwrap().to_string(),
+                            }))
+                        }
+                        _ => self.type_annotation_to_type(ty),
+                    }
+                } else {
+                    self.type_annotation_to_type(ty)
+                }
+            })
             .collect::<Result<Vec<_>>>()?;
         let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
 
