@@ -36,12 +36,6 @@ pub struct SemanticChecker {
     struct_type_info: HashMap<String, ast::StructDefinition>,
 }
 
-impl Default for SemanticChecker {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl SemanticChecker {
     pub fn new() -> Self {
         Self {
