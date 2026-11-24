@@ -102,7 +102,7 @@ impl SemanticChecker {
                 ast::TopDefinition::Import(i) => self.check_import(i)?,
                 ast::TopDefinition::Struct(s) => self.check_struct(s)?,
                 ast::TopDefinition::Function(f) => {
-                    self.check_function(f, &ctx)?;
+                    self.check_function(f, &ctx, None)?;
                 }
             }
         }
@@ -134,7 +134,7 @@ impl SemanticChecker {
 
         // Check methods in struct.
         for method in &struct_def.methods {
-            self.check_function(&method.1, &HashMap::new())?;
+            self.check_function(&method.1, &HashMap::new(), Some(&struct_def.name))?;
         }
 
         Ok(())
