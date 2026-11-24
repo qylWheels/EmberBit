@@ -162,7 +162,7 @@ impl SemanticChecker {
             .map(|(_, name, _)| name.clone())
             .collect::<Vec<_>>();
 
-        // Check parameter types.
+        // Get annotated parameter types.
         let annotated_param_types: Vec<types::Type> = ast
             .params
             .iter()
