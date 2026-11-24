@@ -3,7 +3,7 @@ use crate::semantic;
 use crate::types;
 
 #[derive(Debug, Clone)]
-struct Desugarer<'a> {
+pub struct Desugarer<'a> {
     semantic_checker: &'a semantic::SemanticChecker,
 }
 
