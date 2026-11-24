@@ -62,41 +62,7 @@ impl SemanticChecker {
         Ok(type_annotation.clone())
     }
 
-    fn desugar_self_type_in_struct_def(&mut self, struct_def: &mut ast::StructDefinition) {
-        let target_type = types::Type::Trivial(types::TrivialType {
-            name: struct_def.name.clone(),
-        });
-
-        // Desugar fields.
-        for field in &mut struct_def.fields {
-            if let types::Type::Trivial(types::TrivialType { name }) = &field.2
-                && name == "Self"
-            {
-                field.2 = target_type.clone();
-            }
-        }
-
-        // Desugar methods.
-        for method in &mut struct_def.methods {
-            // Desugar method parameters.
-            for param in &mut method.1.params {
-                if let types::Type::Trivial(types::TrivialType { name }) = &param.2
-                    && name == "Self"
-                {
-                    param.2 = target_type.clone();
-                }
-            }
-
-            // Desugar method return type.
-            if let types::Type::Trivial(types::TrivialType { name }) = &method.1.return_type
-                && name == "Self"
-            {
-                method.1.return_type = target_type.clone();
-            }
-        }
-    }
-
-    pub fn check_module(&mut self, ast: &mut ast::Module) -> Result<()> {
+    pub fn check_module(&mut self, ast: &ast::Module) -> Result<()> {
         // Collect all top definitions into context first.
         let mut ctx = HashMap::new();
         for topdef in &mut ast.top_definitions {
