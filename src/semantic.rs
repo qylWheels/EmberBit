@@ -1,5 +1,4 @@
 use crate::ast;
-use crate::desugar;
 use crate::types;
 use std::collections::{HashMap, HashSet};
 
@@ -115,21 +114,17 @@ impl SemanticChecker {
     }
 
     pub fn check_struct(&mut self, struct_def: &ast::StructDefinition) -> Result<()> {
-        // Desugar struct definition.
-        let desugarer = desugar::Desugarer::new(self);
-        let desugared_struct_def = desugarer.desugar_struct_def(struct_def);
-
         // Check struct fields and methods.
         // It is not allowed to use duplicate field/method names.
         let mut names = HashSet::new();
-        for field in &desugared_struct_def.fields {
+        for field in &struct_def.fields {
             let field_name = field.1.clone();
             if names.contains(&field_name) {
                 return Err(SemanticError::DuplicateField(field_name));
             }
             names.insert(field_name);
         }
-        for method in &desugared_struct_def.methods {
+        for method in &struct_def.methods {
             let method_name = method.1.name.clone();
             if names.contains(&method_name) {
                 return Err(SemanticError::DuplicateField(method_name));
@@ -138,7 +133,7 @@ impl SemanticChecker {
         }
 
         // Check methods in struct.
-        for method in &desugared_struct_def.methods {
+        for method in &struct_def.methods {
             let ctx = method
                 .1
                 .params
@@ -568,11 +563,7 @@ impl SemanticChecker {
                 Ok(ty)
             }
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
-                // Desugar call expression.
-                let desugarer = desugar::Desugarer::new(self);
-                let desugared_callee = desugarer.desugar_expression(callee);
-
-                let callee_type = self.check_expression(&desugared_callee, ctx)?;
+                let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
                     types::Type::Function(func_type) => {
                         // Infer parameter types.
