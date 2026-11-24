@@ -88,13 +88,20 @@ impl<'a> Desugarer<'a> {
                     _ => method.return_type.clone(),
                 };
 
+                // Desugar statements.
+                let desugared_body = method
+                    .body
+                    .iter()
+                    .map(|stmt| self.desugar_statement(stmt))
+                    .collect::<Vec<_>>();
+
                 (
-                    *visibility,
+                    visibility.clone(),
                     FunctionDefinition {
                         name: method.name.clone(),
                         params: desugared_params,
                         return_type: desugared_return_type,
-                        body: method.body.clone(),
+                        body: desugared_body,
                     },
                 )
             })
