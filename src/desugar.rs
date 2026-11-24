@@ -27,11 +27,11 @@ impl<'a> Desugarer<'a> {
         desugared_module
     }
 
-    fn desugar_import(&self, import: &ImportDefinition) -> ImportDefinition {
+    pub fn desugar_import(&self, import: &ImportDefinition) -> ImportDefinition {
         import.clone()
     }
 
-    fn desugar_function(&self, func: &FunctionDefinition) -> FunctionDefinition {
+    pub fn desugar_function(&self, func: &FunctionDefinition) -> FunctionDefinition {
         let desugared_stmts = func
             .body
             .iter()
@@ -46,7 +46,7 @@ impl<'a> Desugarer<'a> {
         }
     }
 
-    fn desugar_struct_def(&self, struct_def: &StructDefinition) -> StructDefinition {
+    pub fn desugar_struct_def(&self, struct_def: &StructDefinition) -> StructDefinition {
         let target_type = types::Type::Trivial(types::TrivialType {
             name: struct_def.name.clone(),
         });
@@ -114,7 +114,7 @@ impl<'a> Desugarer<'a> {
         }
     }
 
-    fn desugar_statement(&self, stmt: &Statement) -> Statement {
+    pub fn desugar_statement(&self, stmt: &Statement) -> Statement {
         match stmt {
             Statement::ConstDef(ConstDefStatement { name, ty, expr }) => {
                 Statement::ConstDef(ConstDefStatement {
@@ -147,7 +147,7 @@ impl<'a> Desugarer<'a> {
         }
     }
 
-    fn desugar_expression(&self, expr: &Expression) -> Expression {
+    pub fn desugar_expression(&self, expr: &Expression) -> Expression {
         match expr {
             Expression::Call(CallExpression { callee, args }) => match &**callee {
                 Expression::FieldAccess(FieldAccessExpression { base, field }) => {
