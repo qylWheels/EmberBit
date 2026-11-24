@@ -73,43 +73,37 @@ fn parse_struct_definition<'a>(input: &mut &'a str) -> Result<ast::StructDefinit
 
 fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
     let parse_function_def = (
-        "func",
-        space1,
-        ws!(parse_identifier),
+        ("func", space1),
+        ws!(parse_available_name),
         '(',
         ws!(separated(
             0..,
-            (
-                ws!(parse_mutability),
-                ws!(parse_available_name),
-                ':',
-                ws!(parse_type)
-            ),
+            (ws!(parse_mutability), ws!(parse_id_and_type)),
             ','
         ))
-        .map(|args: Vec<(types::Mutability, String, _, types::Type)>| {
+        .map(|args: Vec<(types::Mutability, (String, types::Type))>| {
             args.iter()
-                .map(|(mutability, id, _, ty)| (mutability.clone(), id.clone(), ty.clone()))
+                .map(|(mutability, (id, ty))| (mutability.clone(), id.clone(), ty.clone()))
                 .collect::<Vec<_>>()
         }),
         ')',
+        lws!(parse_mutability),
+        space1,
         ws!(parse_type),
         '{',
         ws!(repeat(0.., ws!(parse_statement))),
         '}',
     )
-        .map(|(_, _, id, _, params, _, ret_ty, _, body, _)| {
-            let id = match id {
-                ast::Expression::Identifier(id) => id.name,
-                _ => panic!("Expected identifier in function definition"),
-            };
-            ast::FunctionDefinition {
-                name: id,
-                params,
-                return_type: ret_ty,
-                body,
-            }
-        });
+        .map(
+            |((_, _), id, _, params, _, mutability, _, ret_ty, _, body, _)| {
+                ast::FunctionDefinition {
+                    name: id.clone(),
+                    params,
+                    return_type: (mutability, ret_ty),
+                    body,
+                }
+            },
+        );
 
     alt((parse_function_def,)).parse_next(input)
 }
