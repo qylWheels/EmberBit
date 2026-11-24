@@ -140,17 +140,20 @@ impl SemanticChecker {
 
         // Check methods in struct.
         for method in &struct_def.methods {
-            let mut ctx = HashMap::new();
-            for param in &method.1.params {
-                // Add parameter to context.
-                ctx.insert(
-                    param.1.clone(),
-                    IdentifierProperties {
-                        ty: param.2.clone(),
-                        variable: param.0 == types::Mutability::Var,
-                    },
-                );
-            }
+            let ctx = method
+                .1
+                .params
+                .iter()
+                .map(|(mutability, name, ty)| {
+                    (
+                        name.clone(),
+                        IdentifierProperties {
+                            ty: ty.clone(),
+                            variable: mutability == &types::Mutability::Var,
+                        },
+                    )
+                })
+                .collect::<HashMap<_, _>>();
 
             self.check_function(&method.1, &ctx)?;
         }
