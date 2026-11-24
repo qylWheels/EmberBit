@@ -568,7 +568,11 @@ impl SemanticChecker {
                 Ok(ty)
             }
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
-                let callee_type = self.check_expression(callee, ctx)?;
+                // Desugar call expression.
+                let desugarer = desugar::Desugarer::new(self);
+                let desugared_callee = desugarer.desugar_expression(callee);
+
+                let callee_type = self.check_expression(&desugared_callee, ctx)?;
                 match callee_type {
                     types::Type::Function(func_type) => {
                         // Infer parameter types.
