@@ -1,12 +1,15 @@
 use crate::ast::*;
+use crate::semantic;
 use crate::types;
 
 #[derive(Debug, Clone)]
-struct Desugarer {}
+struct Desugarer<'a> {
+    semantic_checker: &'a semantic::SemanticChecker,
+}
 
-impl Desugarer {
-    pub fn new() -> Self {
-        Self {}
+impl<'a> Desugarer<'a> {
+    pub fn new(semantic_checker: &'a semantic::SemanticChecker) -> Self {
+        Self { semantic_checker }
     }
 
     pub fn desugar_module(&self, module: &Module) -> Module {
@@ -90,6 +93,43 @@ impl Desugarer {
             name: struct_def.name.clone(),
             fields: desugared_fields,
             methods: desugared_methods,
+        }
+    }
+
+    fn desugar_statement(&self, stmt: &Statement) -> Statement {}
+
+    fn desugar_expression(&self, expr: &Expression) -> Expression {
+        match expr {
+            Expression::Call(CallExpression { callee, args }) => match &**callee {
+                Expression::FieldAccess(FieldAccessExpression { base, field }) => {
+                    let ty = self.semantic_checker.get_type_of_node(base).unwrap();
+                    let struct_name = match ty {
+                        types::Type::Trivial(types::TrivialType { name }) => name,
+                        _ => unreachable!(),
+                    };
+                    let struct_info = self
+                        .semantic_checker
+                        .get_struct_type_info(&struct_name)
+                        .unwrap();
+                    let field_name = &field.name;
+                    let method = struct_info
+                        .methods
+                        .iter()
+                        .find(|(_, func_def)| &func_def.name == field_name);
+                    if method.is_some() {
+                        let mut new_args = args.clone();
+                        new_args.insert(0, *base.clone());
+                        Expression::Call(CallExpression {
+                            callee: callee.clone(),
+                            args: new_args,
+                        })
+                    } else {
+                        expr.clone()
+                    }
+                }
+                _ => expr.clone(),
+            },
+            other => other.clone(),
         }
     }
 }
