@@ -134,22 +134,7 @@ impl SemanticChecker {
 
         // Check methods in struct.
         for method in &struct_def.methods {
-            let ctx = method
-                .1
-                .params
-                .iter()
-                .map(|(mutability, name, ty)| {
-                    (
-                        name.clone(),
-                        IdentifierProperties {
-                            ty: ty.clone(),
-                            variable: mutability == &types::Mutability::Var,
-                        },
-                    )
-                })
-                .collect::<HashMap<_, _>>();
-
-            self.check_function(&method.1, &ctx)?;
+            self.check_function(&method.1, &HashMap::new())?;
         }
 
         Ok(())
