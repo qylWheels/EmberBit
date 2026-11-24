@@ -31,8 +31,19 @@ impl<'a> Desugarer<'a> {
         import.clone()
     }
 
-    fn desugar_function(&self, function: &FunctionDefinition) -> FunctionDefinition {
-        function.clone()
+    fn desugar_function(&self, func: &FunctionDefinition) -> FunctionDefinition {
+        let desugared_stmts = func
+            .body
+            .iter()
+            .map(|stmt| self.desugar_statement(stmt))
+            .collect::<Vec<_>>();
+
+        FunctionDefinition {
+            name: func.name.clone(),
+            params: func.params.clone(),
+            return_type: func.return_type.clone(),
+            body: desugared_stmts,
+        }
     }
 
     fn desugar_struct_def(&self, struct_def: &StructDefinition) -> StructDefinition {
