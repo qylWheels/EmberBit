@@ -1,4 +1,5 @@
 use crate::ast::*;
+use crate::types;
 
 #[derive(Debug, Clone)]
 struct Desugarer {}
@@ -32,7 +33,7 @@ impl Desugarer {
     }
 
     fn desugar_struct_def(&self, struct_def: &StructDefinition) -> StructDefinition {
-        let target_type = Type::Trivial(TrivialType {
+        let target_type = types::Type::Trivial(types::TrivialType {
             name: struct_def.name.clone(),
         });
 
@@ -41,7 +42,7 @@ impl Desugarer {
             .fields
             .iter()
             .map(|(visibility, name, ty)| match ty {
-                Type::Trivial(TrivialType { name }) if name == "Self" => {
+                types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
                     (*visibility, name.clone(), target_type.clone())
                 }
                 _ => (*visibility, name.clone(), ty.clone()),
@@ -58,7 +59,7 @@ impl Desugarer {
                     .params
                     .iter()
                     .map(|(mutability, name, ty)| match ty {
-                        Type::Trivial(TrivialType { name }) if name == "Self" => {
+                        types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
                             (*mutability, name.clone(), target_type.clone())
                         }
                         _ => (*mutability, name.clone(), ty.clone()),
@@ -67,7 +68,9 @@ impl Desugarer {
 
                 // Desugar method return type.
                 let desugared_return_type = match &method.return_type {
-                    Type::Trivial(TrivialType { name }) if name == "Self" => target_type.clone(),
+                    types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
+                        target_type.clone()
+                    }
                     _ => method.return_type.clone(),
                 };
 
