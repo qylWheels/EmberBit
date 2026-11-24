@@ -754,7 +754,8 @@ impl SemanticChecker {
                     }
 
                     // Get method type.
-                    let ty = self.check_function(&mut method_def.clone(), ctx)?;
+                    let ty =
+                        self.check_function(&mut method_def.clone(), ctx, Some(&struct_name))?;
 
                     types::Type::Function(ty)
                 };
