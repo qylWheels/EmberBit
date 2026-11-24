@@ -54,6 +54,10 @@ impl SemanticChecker {
         self.type_of_node.get(&(node as *const T as usize))
     }
 
+    pub fn get_struct_type_info(&self, struct_name: &str) -> Option<&ast::StructDefinition> {
+        self.struct_type_info.get(struct_name)
+    }
+
     pub fn type_annotation_to_type(&self, type_annotation: &types::Type) -> Result<types::Type> {
         Ok(type_annotation.clone())
     }
