@@ -96,7 +96,38 @@ impl<'a> Desugarer<'a> {
         }
     }
 
-    fn desugar_statement(&self, stmt: &Statement) -> Statement {}
+    fn desugar_statement(&self, stmt: &Statement) -> Statement {
+        match stmt {
+            Statement::ConstDef(ConstDefStatement { name, ty, expr }) => {
+                Statement::ConstDef(ConstDefStatement {
+                    name: name.clone(),
+                    ty: ty.clone(),
+                    expr: self.desugar_expression(expr),
+                })
+            }
+            Statement::VarDef(VarDefStatement { name, ty, expr }) => {
+                Statement::VarDef(VarDefStatement {
+                    name: name.clone(),
+                    ty: ty.clone(),
+                    expr: self.desugar_expression(expr),
+                })
+            }
+            Statement::Assignment(AssignmentStatement { lhs, rhs }) => {
+                Statement::Assignment(AssignmentStatement {
+                    lhs: self.desugar_expression(lhs),
+                    rhs: self.desugar_expression(rhs),
+                })
+            }
+            Statement::Return(ReturnStatement { expr }) => Statement::Return(ReturnStatement {
+                expr: self.desugar_expression(expr),
+            }),
+            Statement::Expression(ExpressionStatement { expr }) => {
+                Statement::Expression(ExpressionStatement {
+                    expr: self.desugar_expression(expr),
+                })
+            }
+        }
+    }
 
     fn desugar_expression(&self, expr: &Expression) -> Expression {
         match expr {
