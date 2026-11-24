@@ -577,6 +577,23 @@ impl SemanticChecker {
                 let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
                     types::Type::Function(func_type) => {
+                        // If the function is a method, add the receiver to the arguments.
+                        let is_method = self.is_method_of_struct(callee, ctx)?;
+                        let args = if is_method {
+                            let receiver = match &**callee {
+                                ast::Expression::FieldAccess(ast::FieldAccessExpression {
+                                    base,
+                                    field: _,
+                                }) => base.clone(),
+                                _ => callee.clone(),
+                            };
+                            let mut new_args = args.clone();
+                            new_args.insert(0, *receiver);
+                            new_args
+                        } else {
+                            args.clone()
+                        };
+
                         // Infer parameter types.
                         let actual_param_types = args
                             .iter()
