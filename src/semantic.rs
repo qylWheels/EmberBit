@@ -65,13 +65,10 @@ impl SemanticChecker {
     pub fn check_module(&mut self, ast: &ast::Module) -> Result<()> {
         // Collect all top definitions into context first.
         let mut ctx = HashMap::new();
-        for topdef in &mut ast.top_definitions {
+        for topdef in &ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(_i) => {}
                 ast::TopDefinition::Struct(s) => {
-                    // Desugar all `Self` occurrences to struct type.
-                    self.desugar_self_type_in_struct_def(s);
-
                     // Insert struct type into context.
                     self.struct_type_info.insert(s.name.clone(), s.clone());
                 }
@@ -106,7 +103,7 @@ impl SemanticChecker {
             }
         }
 
-        for topdef in &mut ast.top_definitions {
+        for topdef in &ast.top_definitions {
             match topdef {
                 ast::TopDefinition::Import(i) => self.check_import(i)?,
                 ast::TopDefinition::Struct(s) => self.check_struct(s)?,
@@ -572,19 +569,6 @@ impl SemanticChecker {
                 let callee_type = self.check_expression(callee, ctx)?;
                 match callee_type {
                     types::Type::Function(func_type) => {
-                        // If callee is method of struct, desugar it.
-                        if self.is_method_of_struct(callee, ctx)? {
-                            match &**callee {
-                                ast::Expression::FieldAccess(ast::FieldAccessExpression {
-                                    base,
-                                    field,
-                                }) => {
-                                    args.insert(0, (**base).clone());
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-
                         // Infer parameter types.
                         let actual_param_types = args
                             .iter()
