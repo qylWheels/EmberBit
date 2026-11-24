@@ -181,7 +181,19 @@ impl SemanticChecker {
                 }
             })
             .collect::<Result<Vec<_>>>()?;
-        let annotated_return_type = self.type_annotation_to_type(&ast.return_type)?;
+
+        // Get return type.
+        let annotated_return_type = match struct_name {
+            Some(struct_name) => match &ast.return_type {
+                types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
+                    Ok(types::Type::Trivial(types::TrivialType {
+                        name: struct_name.to_string(),
+                    }))
+                }
+                _ => self.type_annotation_to_type(&ast.return_type),
+            },
+            None => self.type_annotation_to_type(&ast.return_type),
+        }?;
 
         let params = param_mutabilities
             .iter()
