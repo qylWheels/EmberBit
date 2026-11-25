@@ -19,7 +19,7 @@ struct Point {
         return x * x + y * y + z * z;
     }
 
-    private func thisisprivatemethod(var p: Point) var Point {
+    private func this_is_private_method(var p: Point) var Point {
         return p;
     }
 }
