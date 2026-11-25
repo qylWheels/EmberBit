@@ -251,6 +251,13 @@ impl<'a> Desugarer<'a> {
                     field: field.clone(),
                 })
             }
+            Expression::StaticMethodAccess(StaticMethodAccessExpression {
+                struct_name,
+                method_name,
+            }) => Expression::StaticMethodAccess(StaticMethodAccessExpression {
+                struct_name: struct_name.clone(),
+                method_name: method_name.clone(),
+            }),
             Expression::Integer(_) | Expression::Identifier(_) => expr.clone(),
         }
     }
