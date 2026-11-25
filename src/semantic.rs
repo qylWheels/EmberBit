@@ -31,12 +31,16 @@ pub struct IdentifierProperties {
 pub struct SemanticChecker {
     /// Struct type information.
     struct_type_info: HashMap<String, ast::StructDefinition>,
+
+    /// Type of node. usize is node address.
+    type_of_node: HashMap<usize, types::Type>,
 }
 
 impl SemanticChecker {
     pub fn new() -> Self {
         Self {
             struct_type_info: HashMap::new(),
+            type_of_node: HashMap::new(),
         }
     }
 
