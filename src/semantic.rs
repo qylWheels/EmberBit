@@ -215,7 +215,7 @@ impl SemanticChecker {
         }
 
         for stmt in &ast.body {
-            curr_ctx = self.check_statement(stmt, &curr_ctx)?;
+            curr_ctx = self.check_statement(stmt, &curr_ctx, struct_name)?;
         }
 
         let last_stmt = ast
@@ -225,7 +225,7 @@ impl SemanticChecker {
 
         let actual_return_type =
             if let ast::Statement::Return(ast::ReturnStatement { expr }) = last_stmt {
-                self.check_expression(expr, &curr_ctx)?
+                self.check_expression(expr, &curr_ctx, struct_name)?
             } else {
                 types::Type::Tuple(types::TupleType { elem_types: vec![] })
             };
@@ -256,10 +256,11 @@ impl SemanticChecker {
         &mut self,
         ast: &ast::Statement,
         ctx: &HashMap<String, IdentifierProperties>,
+        struct_name: Option<&str>,
     ) -> Result<HashMap<String, IdentifierProperties>> {
         match ast {
             ast::Statement::ConstDef(ast::ConstDefStatement { name, ty, expr }) => {
-                let expr_type = self.check_expression(expr, ctx)?;
+                let expr_type = self.check_expression(expr, ctx, struct_name)?;
                 let annotation = self.type_annotation_to_type(ty)?;
                 if annotation != expr_type {
                     return Err(SemanticError::IncompatibleType(format!(
@@ -284,15 +285,15 @@ impl SemanticChecker {
                         base,
                         start: _,
                         end: _,
-                    }) => self.check_expression_assignable(base, ctx)?,
+                    }) => self.check_expression_assignable(base, ctx, struct_name)?,
                     ast::Expression::Index(ast::IndexExpression { base, index: _ }) => {
-                        self.check_expression_assignable(base, ctx)?
+                        self.check_expression_assignable(base, ctx, struct_name)?
                     }
                     ast::Expression::Identifier(_) => {
-                        self.check_expression_assignable(expr, ctx)?
+                        self.check_expression_assignable(expr, ctx, struct_name)?
                     }
                     ast::Expression::FieldAccess(_) => {
-                        self.check_expression_assignable(expr, ctx)?
+                        self.check_expression_assignable(expr, ctx, struct_name)?
                     }
                     _ => true,
                 };
@@ -302,7 +303,7 @@ impl SemanticChecker {
                     ));
                 }
 
-                let expr_type = self.check_expression(expr, ctx)?;
+                let expr_type = self.check_expression(expr, ctx, struct_name)?;
                 let annotation = self.type_annotation_to_type(ty)?;
                 if annotation != expr_type {
                     return Err(SemanticError::IncompatibleType(format!(
@@ -321,13 +322,13 @@ impl SemanticChecker {
                 Ok(new_ctx)
             }
             ast::Statement::Assignment(ast::AssignmentStatement { lhs, rhs }) => {
-                if !self.check_expression_assignable(lhs, ctx)? {
+                if !self.check_expression_assignable(lhs, ctx, struct_name)? {
                     return Err(SemanticError::Variable(
                         "Assignment statement has non-variable lhs".into(),
                     ));
                 }
-                let lhs_type = self.check_expression(lhs, ctx)?;
-                let rhs_type = self.check_expression(rhs, ctx)?;
+                let lhs_type = self.check_expression(lhs, ctx, struct_name)?;
+                let rhs_type = self.check_expression(rhs, ctx, struct_name)?;
                 if lhs_type != rhs_type {
                     return Err(SemanticError::IncompatibleType(format!(
                         "Assignment statement has incompatible types {:?} (lhs) and {:?} (rhs)",
@@ -341,7 +342,7 @@ impl SemanticChecker {
                 Ok(ctx.clone())
             }
             ast::Statement::Expression(ast::ExpressionStatement { expr }) => {
-                let _ = self.check_expression(expr, ctx)?;
+                let _ = self.check_expression(expr, ctx, struct_name)?;
                 Ok(ctx.clone())
             }
         }
@@ -351,6 +352,7 @@ impl SemanticChecker {
         &mut self,
         ast: &ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
+        struct_name: Option<&str>,
     ) -> Result<bool> {
         match ast {
             ast::Expression::Identifier(ast::Identifier { name }) => match ctx.get(name) {
@@ -361,10 +363,10 @@ impl SemanticChecker {
                 ))),
             },
             ast::Expression::Index(ast::IndexExpression { base, .. }) => {
-                let base_type = self.check_expression(base, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
                 let variable = match base_type {
                     types::Type::Array(_) | types::Type::Slice(_) => {
-                        self.check_expression_assignable(base, ctx)?
+                        self.check_expression_assignable(base, ctx, struct_name)?
                     }
                     _ => false,
                 };
@@ -372,11 +374,11 @@ impl SemanticChecker {
             }
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
                 // Check if base is assignable.
-                if !self.check_expression_assignable(base, ctx)? {
+                if !self.check_expression_assignable(base, ctx, struct_name)? {
                     return Ok(false);
                 }
 
-                let base_type = self.check_expression(base, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
 
                 // Get struct actual type.
                 let struct_type = match &base_type {
@@ -413,7 +415,7 @@ impl SemanticChecker {
                 return Ok(true);
             }
             ast::Expression::Call(ast::CallExpression { callee, args: _ }) => {
-                let callee_type = self.check_expression(callee, ctx)?;
+                let callee_type = self.check_expression(callee, ctx, struct_name)?;
                 let assignable = match &callee_type {
                     types::Type::Function(types::FunctionType {
                         params: _,
@@ -442,10 +444,11 @@ impl SemanticChecker {
         &mut self,
         expr: &ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
+        struct_name: Option<&str>,
     ) -> Result<bool> {
         match expr {
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
-                let base_type = self.check_expression(base, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
                 let struct_type = match &base_type {
                     types::Type::Trivial(ty) => self.struct_type_info.get(&ty.name).ok_or(
                         SemanticError::IncompatibleType(
@@ -470,13 +473,14 @@ impl SemanticChecker {
         &mut self,
         ast: &ast::Expression,
         ctx: &HashMap<String, IdentifierProperties>,
+        struct_name: Option<&str>,
     ) -> Result<types::Type> {
         let key = ast as *const ast::Expression as usize;
         match ast {
             ast::Expression::Array(ast::ArrayExpression { elements }) => {
                 let types = elements
                     .iter()
-                    .map(|e| self.check_expression(e, ctx))
+                    .map(|e| self.check_expression(e, ctx, struct_name))
                     .collect::<Result<Vec<_>>>()?;
                 if types.is_empty() {
                     return Err(SemanticError::ArrayElemType(
@@ -499,14 +503,14 @@ impl SemanticChecker {
             ast::Expression::Tuple(ast::TupleExpression { elements }) => {
                 let types = elements
                     .iter()
-                    .map(|e| self.check_expression(e, ctx))
+                    .map(|e| self.check_expression(e, ctx, struct_name))
                     .collect::<Result<Vec<_>>>()?;
                 let ty = types::Type::Tuple(types::TupleType { elem_types: types });
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
             ast::Expression::Index(ast::IndexExpression { base, index }) => {
-                let base_type = self.check_expression(base, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
                 let elem_type = match base_type {
                     types::Type::Array(types::ArrayType { elem_type, .. }) => *elem_type,
                     types::Type::Slice(types::SliceType { elem_type, .. }) => *elem_type,
@@ -517,7 +521,7 @@ impl SemanticChecker {
                         )));
                     }
                 };
-                let index_type = self.check_expression(index, ctx)?;
+                let index_type = self.check_expression(index, ctx, struct_name)?;
                 if !matches!(&index_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
                 {
                     return Err(SemanticError::IndexType(format!(
@@ -529,9 +533,9 @@ impl SemanticChecker {
                 Ok(elem_type)
             }
             ast::Expression::Slice(ast::SliceExpression { base, start, end }) => {
-                let base_type = self.check_expression(base, ctx)?;
-                let start_type = self.check_expression(start, ctx)?;
-                let end_type = self.check_expression(end, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
+                let start_type = self.check_expression(start, ctx, struct_name)?;
+                let end_type = self.check_expression(end, ctx, struct_name)?;
 
                 let elem_type = match &base_type {
                     types::Type::Array(types::ArrayType { elem_type, .. }) => {
@@ -568,8 +572,8 @@ impl SemanticChecker {
                 Ok(ty)
             }
             ast::Expression::Binary(ast::BinaryExpression { lhs, rhs, op }) => {
-                let lhs_type = self.check_expression(lhs, ctx)?;
-                let rhs_type = self.check_expression(rhs, ctx)?;
+                let lhs_type = self.check_expression(lhs, ctx, struct_name)?;
+                let rhs_type = self.check_expression(rhs, ctx, struct_name)?;
                 if lhs_type != rhs_type {
                     return Err(SemanticError::IncompatibleType(format!(
                         "Binary expression {:?} has incompatible types {:?} and {:?}",
@@ -598,14 +602,14 @@ impl SemanticChecker {
                 Ok(ty)
             }
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
-                let callee_type = self.check_expression(callee, ctx)?;
+                let callee_type = self.check_expression(callee, ctx, struct_name)?;
                 let ty = match callee_type {
                     types::Type::Function(func_type) => {
                         // If the callee is a method, the base of the callee is the implicit
                         // receiver and takes the place of the first parameter. The receiver
                         // is never cloned into the argument list, so the types of the
                         // original AST nodes are recorded in `type_of_node`.
-                        let is_method = self.is_method_of_struct(callee, ctx)?;
+                        let is_method = self.is_method_of_struct(callee, ctx, struct_name)?;
                         let receiver = if is_method {
                             match &**callee {
                                 ast::Expression::FieldAccess(ast::FieldAccessExpression {
@@ -621,7 +625,7 @@ impl SemanticChecker {
                         // Infer parameter types of the explicit arguments.
                         let actual_arg_types = args
                             .iter()
-                            .map(|arg| self.check_expression(arg, ctx))
+                            .map(|arg| self.check_expression(arg, ctx, struct_name))
                             .collect::<Result<Vec<_>>>()?;
 
                         // Check if the number of arguments matches the number of parameters.
@@ -644,12 +648,15 @@ impl SemanticChecker {
                             .collect::<Vec<_>>();
                         let mut param_mutabilities = Vec::with_capacity(given_arg_count);
                         if let Some(receiver) = receiver {
-                            param_mutabilities
-                                .push(self.check_expression_assignable(receiver, ctx)?);
+                            param_mutabilities.push(self.check_expression_assignable(
+                                receiver,
+                                ctx,
+                                struct_name,
+                            )?);
                         }
                         param_mutabilities.extend(
                             args.iter()
-                                .map(|arg| self.check_expression_assignable(arg, ctx))
+                                .map(|arg| self.check_expression_assignable(arg, ctx, struct_name))
                                 .collect::<Result<Vec<_>>>()?,
                         );
                         for i in 0..annotated_mutabilities.len() {
@@ -664,7 +671,11 @@ impl SemanticChecker {
                         // Check if the parameter types match.
                         let mut actual_param_types = Vec::with_capacity(given_arg_count);
                         if let Some(receiver) = receiver {
-                            actual_param_types.push(self.check_expression(receiver, ctx)?);
+                            actual_param_types.push(self.check_expression(
+                                receiver,
+                                ctx,
+                                struct_name,
+                            )?);
                         }
                         actual_param_types.extend(actual_arg_types);
                         if actual_param_types
@@ -715,7 +726,7 @@ impl SemanticChecker {
                 // Infer type of each field expression.
                 let field_types = fields
                     .iter()
-                    .map(|(_, expr)| self.check_expression(expr, ctx))
+                    .map(|(_, expr)| self.check_expression(expr, ctx, Some(&struct_name)))
                     .collect::<Result<Vec<_>>>()?;
 
                 // Check if the field types match the declared types.
@@ -744,7 +755,7 @@ impl SemanticChecker {
             }
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field }) => {
                 // Check type of base expression.
-                let base_type = self.check_expression(base, ctx)?;
+                let base_type = self.check_expression(base, ctx, struct_name)?;
                 let struct_name = match base_type {
                     types::Type::Trivial(types::TrivialType { name }) => name,
                     _ => Err(SemanticError::IncompatibleType(format!(
