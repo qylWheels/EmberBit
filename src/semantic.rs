@@ -857,7 +857,7 @@ impl SemanticChecker {
                 }
 
                 // Get method type.
-                let ty = self.check_function(&method_def.clone(), ctx, None)?;
+                let ty = self.check_function(&method_def.clone(), ctx, Some(&struct_name))?;
                 let ty = types::Type::Function(ty);
 
                 self.type_of_node.insert(key, ty.clone());
