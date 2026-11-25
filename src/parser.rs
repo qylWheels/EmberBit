@@ -232,7 +232,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 op: ast::BinaryOp::Div,
             }))
         }),
-        ':' => Infix::Left(30, |_, lhs: ast::Expression, rhs: ast::Expression| {
+        ':' => Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
             let struct_name = match lhs {
                 ast::Expression::Identifier(id) => ast::Identifier { name: id.name.clone() },
                 _ => panic!("Expected identifier in lhs of static method access"),
