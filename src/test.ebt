@@ -1,7 +1,11 @@
 struct Point {
-    public x: i32;
-    public y: i32;
-    public z: i32;
+    private x: i32;
+    private y: i32;
+    private z: i32;
+
+    public func new(var x: i32, var y: i32, var z: i32) var Self {
+        return Point { x: x, y: y, z: z };
+    }
 
     public func get_x(const self: Self) const i32 {
         return self.x;
@@ -11,24 +15,12 @@ struct Point {
         self.x = x;
         return self;
     }
-
-    public func dist_square(const self: Self) var i32 {
-        const x: i32 = self.x;
-        const y: i32 = self.y;
-        const z: i32 = self.z;
-        return x * x + y * y + z * z;
-    }
-
-    private func this_is_private_method(var p: Point) var Point {
-        return p;
-    }
 }
 
 func main() const i32 {
-    var p: Point = Point { x: 1, y: 2, z: 3 };
-    p.set_x(p.get_x())
-        .set_x(2)
-        .set_x(3)
-        .set_x(4);
-    return p.dist_square();
+    var x: i32 = 1;
+    var y: i32 = 2;
+    var z: i32 = 3;
+    var p: Point = Point:new(x, y, z);
+    return 0;
 }
