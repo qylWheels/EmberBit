@@ -7,8 +7,9 @@ struct Point {
         return self.x;
     }
 
-    public func set_x(var self: Self, const x: i32) {
+    public func set_x(var self: Self, const x: i32) var Self {
         self.x = x;
+        return self;
     }
 
     public func dist_square(const self: Self) var i32 {
