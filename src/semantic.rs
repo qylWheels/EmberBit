@@ -575,7 +575,7 @@ impl SemanticChecker {
             }
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
                 let callee_type = self.check_expression(callee, ctx)?;
-                match callee_type {
+                let ty = match callee_type {
                     types::Type::Function(func_type) => {
                         // If the function is a method, add the receiver to the arguments.
                         let is_method = self.is_method_of_struct(callee, ctx)?;
@@ -642,7 +642,7 @@ impl SemanticChecker {
                             )));
                         }
 
-                        Ok((*func_type.return_type).clone())
+                        (*func_type.return_type).clone()
                     }
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
@@ -650,7 +650,10 @@ impl SemanticChecker {
                             other
                         )));
                     }
-                }
+                };
+
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
             }
             ast::Expression::Struct(ast::StructExpression { name, fields }) => {
                 // Get struct type information by name.
