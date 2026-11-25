@@ -3,24 +3,24 @@ struct Point {
     public y: i32;
     public z: i32;
 
-    public func set_x(var self: Self, const x: i32) Self {
+    public func set_x(var self: Self, const x: i32) var Self {
         self.x = x;
         return self;
     }
 
-    public func dist_square(const self: Self) i32 {
+    public func dist_square(const self: Self) var i32 {
         const x: i32 = self.x;
         const y: i32 = self.y;
         const z: i32 = self.z;
         return x * x + y * y + z * z;
     }
 
-    private func thisisprivatemethod(var p: Point) Point {
+    private func thisisprivatemethod(var p: Point) var Point {
         return p;
     }
 }
 
-func main() i32 {
+func main() const i32 {
     var p: Point = Point { x: 1, y: 2, z: 3 };
     p.set_x(2).set_x(3).set_x(4);
     return p.dist_square();
