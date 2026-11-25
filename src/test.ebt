@@ -11,10 +11,6 @@ struct Point {
         return self.x;
     }
 
-    public func set_x(var self: Self, const x: i32) var Self {
-        self.x = x;
-        return self;
-    }
 }
 
 func main() const i32 {
