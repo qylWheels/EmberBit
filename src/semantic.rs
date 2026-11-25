@@ -404,12 +404,13 @@ impl SemanticChecker {
                     )))?;
 
                 // Check if field is visible.
-                // TODO: It is ok to visit private fields in struct methods.
-                if field_visibility_and_type.0 != Visibility::Public {
-                    return Err(SemanticError::Visibility(format!(
-                        "Field {} is not visible outside struct definition",
-                        field.name
-                    )));
+                if !in_struct_scope.is_some_and(|s| s == struct_type.name) {
+                    if field_visibility_and_type.0 != Visibility::Public {
+                        return Err(SemanticError::Visibility(format!(
+                            "Field {} is not visible outside struct definition",
+                            field.name
+                        )));
+                    }
                 }
 
                 return Ok(true);
