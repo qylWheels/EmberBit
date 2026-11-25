@@ -57,7 +57,9 @@ impl<'a> Desugarer<'a> {
             .fields
             .iter()
             .map(|(visibility, name, ty)| match ty {
-                types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
+                types::Type::Trivial(types::TrivialType { name: type_name })
+                    if type_name == "Self" =>
+                {
                     (*visibility, name.clone(), target_type.clone())
                 }
                 _ => (*visibility, name.clone(), ty.clone()),
@@ -74,7 +76,9 @@ impl<'a> Desugarer<'a> {
                     .params
                     .iter()
                     .map(|(mutability, name, ty)| match ty {
-                        types::Type::Trivial(types::TrivialType { name }) if name == "Self" => {
+                        types::Type::Trivial(types::TrivialType { name: type_name })
+                            if type_name == "Self" =>
+                        {
                             (*mutability, name.clone(), target_type.clone())
                         }
                         _ => (*mutability, name.clone(), ty.clone()),
