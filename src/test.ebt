@@ -3,7 +3,7 @@ struct Point {
     public y: i32;
     public z: i32;
 
-    public func get_x(const self: Self, const x: i32) const i32 {
+    public func get_x(const self: Self) const i32 {
         return self.x;
     }
 
@@ -26,6 +26,6 @@ struct Point {
 
 func main() const i32 {
     var p: Point = Point { x: 1, y: 2, z: 3 };
-    p.set_x(2);
+    p.set_x(p.get_x());
     return p.dist_square();
 }
