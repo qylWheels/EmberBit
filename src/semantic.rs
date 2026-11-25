@@ -822,6 +822,47 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
+            ast::Expression::StaticMethodAccess(ast::StaticMethodAccessExpression {
+                struct_name,
+                method_name,
+            }) => {
+                let struct_name = struct_name.name.clone();
+                let method_name = method_name.name.clone();
+
+                // Get struct type information by name.
+                let struct_def =
+                    self.struct_type_info
+                        .get(&struct_name)
+                        .ok_or(SemanticError::NoType(format!(
+                            "Type {} is not defined",
+                            &struct_name
+                        )))?;
+
+                // Check if method exists.
+                let (visibility, method_def) = struct_def
+                    .methods
+                    .iter()
+                    .find(|(_, method_def)| &method_def.name == &method_name)
+                    .ok_or(SemanticError::UnboundedIdentifier(format!(
+                        "Method {} is not defined",
+                        method_name.clone()
+                    )))?;
+
+                // Check if method is public.
+                if *visibility != Visibility::Public {
+                    return Err(SemanticError::Visibility(format!(
+                        "Method {} is private, for which accessing it by static method access expression is not allowed",
+                        method_name.clone()
+                    )));
+                }
+
+                // Get method type.
+                let ty = self.check_function(&method_def.clone(), ctx, None)?;
+                let ty = types::Type::Function(ty);
+
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
+            }
         }
     }
 }
