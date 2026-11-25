@@ -29,9 +29,6 @@ pub struct IdentifierProperties {
 
 #[derive(Debug)]
 pub struct SemanticChecker {
-    /// usize: address of AST node
-    type_of_node: HashMap<usize, types::Type>,
-
     /// Struct type information.
     struct_type_info: HashMap<String, ast::StructDefinition>,
 }
@@ -39,13 +36,8 @@ pub struct SemanticChecker {
 impl SemanticChecker {
     pub fn new() -> Self {
         Self {
-            type_of_node: HashMap::new(),
             struct_type_info: HashMap::new(),
         }
-    }
-
-    pub fn get_type_of_node<T>(&self, node: &T) -> Option<&types::Type> {
-        self.type_of_node.get(&(node as *const T as usize))
     }
 
     pub fn get_struct_type_info(&self, struct_name: &str) -> Option<&ast::StructDefinition> {
