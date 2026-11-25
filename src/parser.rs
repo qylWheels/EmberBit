@@ -174,13 +174,15 @@ fn parse_type<'a>(input: &mut &'a str) -> Result<types::Type> {
             ','
         )),
         ')',
+        ws!(parse_mutability),
         ws!(parse_type),
     )
         .map(
-            |(_, params, _, return_type): (
+            |(_, params, _, return_type_mutability, return_type): (
                 _,
                 Vec<(types::Mutability, _, types::Type)>,
                 _,
+                types::Mutability,
                 types::Type,
             )| {
                 let param_mutabilities_and_types = params
@@ -189,6 +191,7 @@ fn parse_type<'a>(input: &mut &'a str) -> Result<types::Type> {
                     .collect::<Vec<_>>();
                 types::Type::Function(types::FunctionType {
                     params: param_mutabilities_and_types,
+                    return_type_mutability,
                     return_type: Box::new(return_type),
                 })
             },
