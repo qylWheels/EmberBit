@@ -37,5 +37,6 @@ pub struct TupleType {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FunctionType {
     pub params: Vec<(Mutability, Type)>,
+    pub return_type_mutability: Mutability,
     pub return_type: Box<Type>,
 }
