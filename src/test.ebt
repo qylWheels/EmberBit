@@ -3,7 +3,11 @@ struct Point {
     public y: i32;
     public z: i32;
 
-    public func set_x(var self: Self, const x: i32) var Self {
+    public func get_x(const self: Self, const x: i32) const i32 {
+        return self.x;
+    }
+
+    public func set_x(var self: Self, const x: i32) {
         self.x = x;
         return self;
     }
