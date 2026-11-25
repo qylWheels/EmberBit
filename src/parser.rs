@@ -280,9 +280,9 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     };
 
     expression(ws!(alt((parse_struct_expr, parse_atom_expression))))
-        .prefix(prefix_parser)
-        .infix(infix_parser)
-        .postfix(postfix_parser)
+        .prefix(ws!(prefix_parser))
+        .infix(ws!(infix_parser))
+        .postfix(ws!(postfix_parser))
         .parse_next(input)
 }
 
