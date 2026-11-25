@@ -1,6 +1,6 @@
 //! Abstract Syntax Tree (AST) definitions for EmberBit.
 
-use crate::types::{self, *};
+use crate::types::*;
 
 #[derive(Debug, Clone)]
 pub struct Module {
@@ -97,13 +97,11 @@ pub enum Expression {
 #[derive(Debug, Clone)]
 pub struct ArrayExpression {
     pub elements: Vec<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct TupleExpression {
     pub elements: Vec<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
@@ -119,7 +117,6 @@ pub struct BinaryExpression {
     pub lhs: Box<Expression>,
     pub op: BinaryOp,
     pub rhs: Box<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
@@ -127,45 +124,38 @@ pub struct SliceExpression {
     pub base: Box<Expression>,
     pub start: Box<Expression>,
     pub end: Box<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct IndexExpression {
     pub base: Box<Expression>,
     pub index: Box<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct CallExpression {
     pub callee: Box<Expression>,
     pub args: Vec<Expression>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     pub value: i64,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Identifier {
     pub name: String,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct StructExpression {
     pub name: String,
     pub fields: Vec<(String, Expression)>,
-    pub ty: Option<types::Type>,
 }
 
 #[derive(Debug, Clone)]
 pub struct FieldAccessExpression {
     pub base: Box<Expression>,
     pub field: Identifier,
-    pub ty: Option<types::Type>,
 }
