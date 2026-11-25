@@ -21,9 +21,28 @@ struct Point {
 }
 
 func main() const i32 {
-    var x: i32 = 1;
-    var y: i32 = 2;
-    var z: i32 = 3;
-    var p: Point = Point:new(x, y, z);
-    return 0;
+    var x1: i32 = 1;
+    var y1: i32 = 2;
+    var z1: i32 = 3;
+
+    var x2: i32 = 2;
+    var y2: i32 = 3;
+    var z2: i32 = 4;
+
+    var p1: Point = Point:new(x1, y1, z1);
+    var p2: Point = Point:new(x2, y2, z2);
+
+    return dist_square_of_two_points(p1, p2);
+}
+
+func dist_square_of_two_points(const p1: Point, const p2: Point) const i32 {
+    const p1x: i32 = p1.get_x();
+    const p1y: i32 = p1.get_y();
+    const p1z: i32 = p1.get_z();
+    const p2x: i32 = p2.get_x();
+    const p2y: i32 = p2.get_y();
+    const p2z: i32 = p2.get_z();
+
+    return (p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)
+        + (p1z - p2z) * (p1z - p2z);
 }
