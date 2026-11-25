@@ -361,6 +361,20 @@ impl Interpreter {
                     _ => unreachable!(),
                 }
             }
+            ast::Expression::StaticMethodAccess(e) => {
+                let struct_def = self.struct_defs.get(&e.struct_name.name).unwrap();
+                let (_, method) = struct_def
+                    .methods
+                    .iter()
+                    .find(|(_, method)| method.name == e.method_name.name)
+                    .unwrap();
+                let method_value =
+                    InnerMutableValueRef(Rc::new(RefCell::new(Value::Function(Function {
+                        ast: method as *const ast::FunctionDefinition,
+                    }))));
+                self.values.insert(method_value.clone());
+                Ok(method_value.clone())
+            }
         }
     }
 
