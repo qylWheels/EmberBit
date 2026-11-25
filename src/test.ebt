@@ -11,6 +11,13 @@ struct Point {
         return self.x;
     }
 
+    public func get_y(const self: Self) const i32 {
+        return self.y;
+    }
+
+    public func get_z(const self: Self) const i32 {
+        return self.z;
+    }
 }
 
 func main() const i32 {
