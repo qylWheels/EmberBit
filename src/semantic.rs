@@ -577,35 +577,38 @@ impl SemanticChecker {
                 let callee_type = self.check_expression(callee, ctx)?;
                 let ty = match callee_type {
                     types::Type::Function(func_type) => {
-                        // If the function is a method, add the receiver to the arguments.
+                        // If the callee is a method, the base of the callee is the implicit
+                        // receiver and takes the place of the first parameter. The receiver
+                        // is never cloned into the argument list, so the types of the
+                        // original AST nodes are recorded in `type_of_node`.
                         let is_method = self.is_method_of_struct(callee, ctx)?;
-                        let args = if is_method {
-                            let receiver = match &**callee {
+                        let receiver = if is_method {
+                            match &**callee {
                                 ast::Expression::FieldAccess(ast::FieldAccessExpression {
                                     base,
-                                    field: _,
-                                }) => base.clone(),
-                                _ => callee.clone(),
-                            };
-                            let mut new_args = args.clone();
-                            new_args.insert(0, *receiver);
-                            new_args
+                                    ..
+                                }) => Some(&**base),
+                                _ => None,
+                            }
                         } else {
-                            args.clone()
+                            None
                         };
 
-                        // Infer parameter types.
-                        let actual_param_types = args
+                        // Infer parameter types of the explicit arguments.
+                        let actual_arg_types = args
                             .iter()
                             .map(|arg| self.check_expression(arg, ctx))
                             .collect::<Result<Vec<_>>>()?;
 
                         // Check if the number of arguments matches the number of parameters.
-                        if actual_param_types.len() != func_type.params.len() {
+                        // The implicit receiver occupies the first parameter.
+                        let expected_param_count = func_type.params.len();
+                        let given_arg_count =
+                            actual_arg_types.len() + usize::from(receiver.is_some());
+                        if given_arg_count != expected_param_count {
                             return Err(SemanticError::IncompatibleType(format!(
                                 "Function has {} parameters, but {} arguments are given",
-                                func_type.params.len(),
-                                args.len()
+                                expected_param_count, given_arg_count
                             )));
                         }
 
@@ -615,12 +618,18 @@ impl SemanticChecker {
                             .iter()
                             .map(|(mutability, _)| *mutability == types::Mutability::Var)
                             .collect::<Vec<_>>();
-                        let param_mutabilities = args
-                            .iter()
-                            .map(|arg| self.check_expression_assignable(arg, ctx))
-                            .collect::<Result<Vec<_>>>()?;
+                        let mut param_mutabilities = Vec::with_capacity(given_arg_count);
+                        if let Some(receiver) = receiver {
+                            param_mutabilities
+                                .push(self.check_expression_assignable(receiver, ctx)?);
+                        }
+                        param_mutabilities.extend(
+                            args.iter()
+                                .map(|arg| self.check_expression_assignable(arg, ctx))
+                                .collect::<Result<Vec<_>>>()?,
+                        );
                         for i in 0..annotated_mutabilities.len() {
-                            if annotated_mutabilities[i] == true && param_mutabilities[i] == false {
+                            if annotated_mutabilities[i] && !param_mutabilities[i] {
                                 return Err(SemanticError::Variable(format!(
                                     "Parameter {} requires mutable, but a constant is given",
                                     i
@@ -629,6 +638,11 @@ impl SemanticChecker {
                         }
 
                         // Check if the parameter types match.
+                        let mut actual_param_types = Vec::with_capacity(given_arg_count);
+                        if let Some(receiver) = receiver {
+                            actual_param_types.push(self.check_expression(receiver, ctx)?);
+                        }
+                        actual_param_types.extend(actual_arg_types);
                         if actual_param_types
                             != func_type
                                 .params
