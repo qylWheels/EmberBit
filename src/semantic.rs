@@ -44,6 +44,10 @@ impl SemanticChecker {
         }
     }
 
+    pub fn get_type_of_node<T>(&self, node: &T) -> Option<&types::Type> {
+        self.type_of_node.get(&(node as *const _ as usize))
+    }
+
     pub fn get_struct_type_info(&self, struct_name: &str) -> Option<&ast::StructDefinition> {
         self.struct_type_info.get(struct_name)
     }
