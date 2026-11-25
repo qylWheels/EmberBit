@@ -232,6 +232,20 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 op: ast::BinaryOp::Div,
             }))
         }),
+        ':' => Infix::Left(30, |_, lhs: ast::Expression, rhs: ast::Expression| {
+            let struct_name = match lhs {
+                ast::Expression::Identifier(id) => ast::Identifier { name: id.name.clone() },
+                _ => panic!("Expected identifier in lhs of static method access"),
+            };
+            let method_name = match rhs {
+                ast::Expression::Identifier(id) => ast::Identifier { name: id.name.clone() },
+                _ => panic!("Expected identifier in rhs of static method access"),
+            };
+            Ok(ast::Expression::StaticMethodAccess(ast::StaticMethodAccessExpression {
+                struct_name,
+                method_name,
+            }))
+        }),
         _ => fail
     };
     let postfix_parser = dispatch! {any;
