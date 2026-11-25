@@ -41,6 +41,7 @@ impl<'a> Desugarer<'a> {
         FunctionDefinition {
             name: func.name.clone(),
             params: func.params.clone(),
+            return_type_mutability: func.return_type_mutability.clone(),
             return_type: func.return_type.clone(),
             body: desugared_stmts,
         }
@@ -100,6 +101,7 @@ impl<'a> Desugarer<'a> {
                     FunctionDefinition {
                         name: method.name.clone(),
                         params: desugared_params,
+                        return_type_mutability: method.return_type_mutability.clone(),
                         return_type: desugared_return_type,
                         body: desugared_body,
                     },
