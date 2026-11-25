@@ -92,6 +92,7 @@ pub enum Expression {
     Identifier(Identifier),
     Struct(StructExpression),
     FieldAccess(FieldAccessExpression),
+    StaticMethodAccess(StaticMethodAccessExpression),
 }
 
 #[derive(Debug, Clone)]
@@ -158,4 +159,10 @@ pub struct StructExpression {
 pub struct FieldAccessExpression {
     pub base: Box<Expression>,
     pub field: Identifier,
+}
+
+#[derive(Debug, Clone)]
+pub struct StaticMethodAccessExpression {
+    pub struct_name: Identifier,
+    pub method_name: Identifier,
 }
