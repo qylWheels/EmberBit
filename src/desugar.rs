@@ -151,36 +151,103 @@ impl<'a> Desugarer<'a> {
 
     pub fn desugar_expression(&self, expr: &Expression) -> Expression {
         match expr {
-            Expression::Call(CallExpression { callee, args }) => match &**callee {
-                Expression::FieldAccess(FieldAccessExpression { base, field }) => {
-                    let ty = self.semantic_checker.get_type_of_node(&**base).unwrap();
-                    let struct_name = match ty {
+            Expression::Array(ArrayExpression { elements }) => Expression::Array(ArrayExpression {
+                elements: elements
+                    .iter()
+                    .map(|element| self.desugar_expression(element))
+                    .collect(),
+            }),
+            Expression::Tuple(TupleExpression { elements }) => Expression::Tuple(TupleExpression {
+                elements: elements
+                    .iter()
+                    .map(|element| self.desugar_expression(element))
+                    .collect(),
+            }),
+            Expression::Binary(BinaryExpression { lhs, op, rhs }) => {
+                Expression::Binary(BinaryExpression {
+                    lhs: Box::new(self.desugar_expression(lhs)),
+                    op: op.clone(),
+                    rhs: Box::new(self.desugar_expression(rhs)),
+                })
+            }
+            Expression::Slice(SliceExpression { base, start, end }) => {
+                Expression::Slice(SliceExpression {
+                    base: Box::new(self.desugar_expression(base)),
+                    start: Box::new(self.desugar_expression(start)),
+                    end: Box::new(self.desugar_expression(end)),
+                })
+            }
+            Expression::Index(IndexExpression { base, index }) => {
+                Expression::Index(IndexExpression {
+                    base: Box::new(self.desugar_expression(base)),
+                    index: Box::new(self.desugar_expression(index)),
+                })
+            }
+            Expression::Call(CallExpression { callee, args }) => {
+                let desugared_callee = self.desugar_expression(callee);
+                let mut desugared_args = args
+                    .iter()
+                    .map(|arg| self.desugar_expression(arg))
+                    .collect::<Vec<_>>();
+
+                // If the callee is a method of a struct, the receiver becomes the first
+                // argument. The type is looked up on the *original* base node, because
+                // `type_of_node` is keyed by the address of the checked AST nodes.
+                if let (
+                    Expression::FieldAccess(FieldAccessExpression {
+                        base: original_base,
+                        field,
+                    }),
+                    Expression::FieldAccess(FieldAccessExpression {
+                        base: desugared_base,
+                        ..
+                    }),
+                ) = (&**callee, &desugared_callee)
+                {
+                    let base_type = self
+                        .semantic_checker
+                        .get_type_of_node(&**original_base)
+                        .unwrap();
+                    let struct_name = match base_type {
                         types::Type::Trivial(types::TrivialType { name }) => name,
                         _ => unreachable!(),
                     };
                     let struct_info = self
                         .semantic_checker
-                        .get_struct_type_info(&struct_name)
+                        .get_struct_type_info(struct_name)
                         .unwrap();
-                    let field_name = &field.name;
-                    let method = struct_info
+                    let is_method = struct_info
                         .methods
                         .iter()
-                        .find(|(_, func_def)| &func_def.name == field_name);
-                    if method.is_some() {
-                        let mut new_args = args.clone();
-                        new_args.insert(0, *base.clone());
-                        Expression::Call(CallExpression {
-                            callee: callee.clone(),
-                            args: new_args,
-                        })
-                    } else {
-                        expr.clone()
+                        .any(|(_, func_def)| &func_def.name == &field.name);
+                    if is_method {
+                        desugared_args.insert(0, desugared_base.as_ref().clone());
                     }
                 }
-                _ => expr.clone(),
-            },
-            other => other.clone(),
+
+                Expression::Call(CallExpression {
+                    callee: Box::new(desugared_callee),
+                    args: desugared_args,
+                })
+            }
+            Expression::Struct(StructExpression { name, fields }) => {
+                Expression::Struct(StructExpression {
+                    name: name.clone(),
+                    fields: fields
+                        .iter()
+                        .map(|(field_name, expr)| {
+                            (field_name.clone(), self.desugar_expression(expr))
+                        })
+                        .collect(),
+                })
+            }
+            Expression::FieldAccess(FieldAccessExpression { base, field }) => {
+                Expression::FieldAccess(FieldAccessExpression {
+                    base: Box::new(self.desugar_expression(base)),
+                    field: field.clone(),
+                })
+            }
+            Expression::Integer(_) | Expression::Identifier(_) => expr.clone(),
         }
     }
 }
