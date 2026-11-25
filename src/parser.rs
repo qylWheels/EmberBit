@@ -87,15 +87,13 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
                 .collect::<Vec<_>>()
         }),
         ')',
-        lws!(parse_mutability),
-        space1,
-        ws!(parse_type),
+        (lws!(parse_mutability), space1, ws!(parse_type)),
         '{',
         ws!(repeat(0.., ws!(parse_statement))),
         '}',
     )
         .map(
-            |((_, _), id, _, params, _, mutability, _, ret_ty, _, body, _)| {
+            |((_, _), id, _, params, _, (mutability, _, ret_ty), _, body, _)| {
                 ast::FunctionDefinition {
                     name: id.clone(),
                     params,
