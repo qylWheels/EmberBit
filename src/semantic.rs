@@ -84,6 +84,7 @@ impl SemanticChecker {
                             .zip(annotated_param_types.iter())
                             .map(|(mutability, ty)| (mutability.clone(), ty.clone()))
                             .collect(),
+                        return_type_mutability: f.return_type_mutability.clone(),
                         return_type: Box::new(annotated_return_type.clone()),
                     });
                     ctx.insert(
@@ -241,6 +242,7 @@ impl SemanticChecker {
                 .iter()
                 .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
                 .collect(),
+            return_type_mutability: ast.return_type_mutability.clone(),
             return_type: Box::new(actual_return_type),
         };
         self.type_of_node.insert(
@@ -409,6 +411,28 @@ impl SemanticChecker {
                 }
 
                 return Ok(true);
+            }
+            ast::Expression::Call(ast::CallExpression { callee, args: _ }) => {
+                let callee_type = self.check_expression(callee, ctx)?;
+                let assignable = match &callee_type {
+                    types::Type::Function(types::FunctionType {
+                        params: _,
+                        return_type_mutability,
+                        return_type: _,
+                    }) => {
+                        if return_type_mutability == &types::Mutability::Const {
+                            Ok(false)
+                        } else {
+                            Ok(true)
+                        }
+                    }
+                    other => Err(SemanticError::IncompatibleType(format!(
+                        "Callee in call expression must be a function, but it has type {:?}",
+                        other
+                    ))),
+                };
+
+                return assignable;
             }
             _ => Ok(false),
         }
