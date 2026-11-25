@@ -206,7 +206,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
                 op: ast::BinaryOp::Add,
-                ty: None,
             }))
         }),
         '-' => Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
@@ -214,7 +213,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
                 op: ast::BinaryOp::Sub,
-                ty: None,
             }))
         }),
         '*' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
@@ -222,7 +220,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
                 op: ast::BinaryOp::Mul,
-                ty: None,
             }))
         }),
         '/' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
@@ -230,7 +227,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
                 op: ast::BinaryOp::Div,
-                ty: None,
             }))
         }),
         _ => fail
@@ -243,7 +239,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                         ast::IndexExpression {
                             base: Box::new(base.clone()),
                             index: Box::new(e),
-                            ty: None,
                         }
                     )
                 );
@@ -254,7 +249,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                             base: Box::new(base.clone()),
                             start: Box::new(start.clone()),
                             end: Box::new(end.clone()),
-                            ty: None,
                         }
                     )
                 );
@@ -265,7 +259,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 .map(|(args, _)| ast::Expression::Call(ast::CallExpression {
                     callee: Box::new(base.clone()),
                     args,
-                    ty: None,
                 }))
                 .parse_next(input)
         }),
@@ -279,7 +272,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     ast::Expression::FieldAccess(ast::FieldAccessExpression {
                         base: Box::new(base.clone()),
                         field: id,
-                        ty: None,
                     })
                 })
                 .parse_next(input)
@@ -303,11 +295,7 @@ fn parse_struct_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         '}',
     )
         .map(|(name, _, fields, _, _)| {
-            ast::Expression::Struct(ast::StructExpression {
-                name,
-                fields,
-                ty: None,
-            })
+            ast::Expression::Struct(ast::StructExpression { name, fields })
         })
         .parse_next(input)
 }
@@ -322,7 +310,7 @@ fn parse_paren_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 
 fn parse_identifier<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     parse_available_name
-        .map(|s| ast::Expression::Identifier(ast::Identifier { name: s, ty: None }))
+        .map(|s| ast::Expression::Identifier(ast::Identifier { name: s }))
         .parse_next(input)
 }
 
@@ -340,7 +328,7 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     .unwrap()
             },
         )
-        .map(|i| ast::Expression::Integer(ast::IntegerLiteral { value: i, ty: None }))
+        .map(|i| ast::Expression::Integer(ast::IntegerLiteral { value: i }))
         .parse_next(input)
 }
 
