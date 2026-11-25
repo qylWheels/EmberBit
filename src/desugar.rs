@@ -153,7 +153,7 @@ impl<'a> Desugarer<'a> {
         match expr {
             Expression::Call(CallExpression { callee, args }) => match &**callee {
                 Expression::FieldAccess(FieldAccessExpression { base, field }) => {
-                    let ty = self.semantic_checker.get_type_of_node(base).unwrap();
+                    let ty = self.semantic_checker.get_type_of_node(&**base).unwrap();
                     let struct_name = match ty {
                         types::Type::Trivial(types::TrivialType { name }) => name,
                         _ => unreachable!(),
