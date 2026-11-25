@@ -798,12 +798,13 @@ impl SemanticChecker {
                         .find(|(_, name, _)| name == &field.name)
                         .unwrap();
 
-                    // TODO: Allow accessing private fields in struct methods.
-                    if *field_visibility != Visibility::Public {
-                        return Err(SemanticError::Visibility(format!(
-                            "Field {} is private, for which accessing it by field access expression is not allowed",
-                            &field.name
-                        )));
+                    if !in_struct_scope.is_some_and(|s| s == struct_name) {
+                        if *field_visibility != Visibility::Public {
+                            return Err(SemanticError::Visibility(format!(
+                                "Field {} is private, for which accessing it by field access expression is not allowed",
+                                &field.name
+                            )));
+                        }
                     }
 
                     // Get field type.
@@ -818,12 +819,13 @@ impl SemanticChecker {
                         .find(|(_, method_def)| &method_def.name == &field.name)
                         .unwrap();
 
-                    // TODO: Allow accessing private methods in struct methods.
-                    if *method_visibility != Visibility::Public {
-                        return Err(SemanticError::Visibility(format!(
-                            "Method {} is private, for which accessing it by field access expression is not allowed",
-                            &field.name
-                        )));
+                    if !in_struct_scope.is_some_and(|s| s == struct_name) {
+                        if *method_visibility != Visibility::Public {
+                            return Err(SemanticError::Visibility(format!(
+                                "Method {} is private, for which accessing it by field access expression is not allowed",
+                                &field.name
+                            )));
+                        }
                     }
 
                     // Get method type.
