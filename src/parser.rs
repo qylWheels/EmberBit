@@ -97,7 +97,8 @@ fn parse_function<'a>(input: &mut &'a str) -> Result<ast::FunctionDefinition> {
                 ast::FunctionDefinition {
                     name: id.clone(),
                     params,
-                    return_type: (mutability, ret_ty),
+                    return_type_mutability: mutability,
+                    return_type: ret_ty,
                     body,
                 }
             },
