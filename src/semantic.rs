@@ -872,6 +872,42 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
+            ast::Expression::MethodAccess(ast::MethodAccessExpression { base, method_name }) => {
+                let base_type = self.check_expression(base, ctx, curr_struct_scope)?;
+                let struct_name = match base_type {
+                    types::Type::Trivial(types::TrivialType { name }) => name,
+                    _ => Err(SemanticError::IncompatibleType(format!(
+                        "Base expression must be of type struct, but {:?} is given",
+                        base_type
+                    )))?,
+                };
+                let struct_info =
+                    self.struct_type_info
+                        .get(&struct_name)
+                        .ok_or(SemanticError::NoType(format!(
+                            "Type {} is not defined",
+                            &struct_name
+                        )))?;
+                let method = struct_info
+                    .methods
+                    .iter()
+                    .find(|(_, method_def)| &method_def.name == &method_name.name)
+                    .ok_or(SemanticError::UnboundedIdentifier(format!(
+                        "Method {:?} is not defined",
+                        method_name.clone()
+                    )))?;
+                if method.0 != Visibility::Public {
+                    return Err(SemanticError::Visibility(format!(
+                        "Method {:?} is private, for which accessing it by method access expression is not allowed",
+                        method_name.clone()
+                    )));
+                }
+                let method_type = self.check_function(&method.1.clone(), ctx, curr_struct_scope)?;
+
+                let ty = types::Type::Function(method_type);
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
+            }
             ast::Expression::StaticMethodAccess(ast::StaticMethodAccessExpression {
                 struct_name,
                 method_name,
