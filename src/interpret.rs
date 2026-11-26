@@ -38,7 +38,7 @@ pub struct Function {
 
 #[derive(Debug, Clone)]
 pub enum Value {
-    Int(i64),
+    Integer(i64),
     Array(Array),
     Slice(Slice),
     Tuple(Tuple),
@@ -212,11 +212,11 @@ impl Interpreter {
                 let lhs = self.interpret_expression(e.lhs.as_ref(), env)?;
                 let rhs = self.interpret_expression(e.rhs.as_ref(), env)?;
                 let lhs_int = match *lhs.0.borrow() {
-                    Value::Int(n) => n,
+                    Value::Integer(n) => n,
                     _ => unreachable!(),
                 };
                 let rhs_int = match *rhs.0.borrow() {
-                    Value::Int(n) => n,
+                    Value::Integer(n) => n,
                     _ => unreachable!(),
                 };
                 let result = match e.op {
@@ -225,7 +225,7 @@ impl Interpreter {
                     ast::BinaryOp::Mul => lhs_int * rhs_int,
                     ast::BinaryOp::Div => lhs_int / rhs_int,
                 };
-                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Int(result))));
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Integer(result))));
                 self.values.insert(value.clone());
                 Ok(value)
             }
@@ -234,11 +234,11 @@ impl Interpreter {
                 let start = self.interpret_expression(start.as_ref(), env)?;
                 let end = self.interpret_expression(end.as_ref(), env)?;
                 let start = match *start.0.borrow() {
-                    Value::Int(n) if n >= 0 => n as usize,
+                    Value::Integer(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
                 let end = match *end.0.borrow() {
-                    Value::Int(n) if n >= 0 => n as usize,
+                    Value::Integer(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
                 let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Slice(Slice {
@@ -252,7 +252,7 @@ impl Interpreter {
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), env)?;
                 let index = match *index.0.borrow() {
-                    Value::Int(n) if n >= 0 => n as usize,
+                    Value::Integer(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
                 let base = self.interpret_expression(e.base.as_ref(), env)?;
@@ -270,7 +270,7 @@ impl Interpreter {
             }
             ast::Expression::Identifier(e) => Ok(env.get(&e.name).cloned().unwrap()),
             ast::Expression::Integer(e) => {
-                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Int(e.value))));
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Integer(e.value))));
                 self.values.insert(value.clone());
                 Ok(value)
             }
@@ -391,7 +391,7 @@ impl Interpreter {
             ast::Expression::Index(e) => {
                 let index = self.interpret_expression(e.index.as_ref(), &env_copy)?;
                 let index = match *index.0.borrow() {
-                    Value::Int(n) if n >= 0 => n as usize,
+                    Value::Integer(n) if n >= 0 => n as usize,
                     _ => unreachable!(),
                 };
                 let base = self.interpret_lvalue_expression(e.base.as_ref(), env)?;
