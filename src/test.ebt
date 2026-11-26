@@ -1,33 +1,33 @@
 struct Point {
-    private x: i32;
-    private y: i32;
-    private z: i32;
+    private x: Integer;
+    private y: Integer;
+    private z: Integer;
 
-    public func new(var x: i32, var y: i32, var z: i32) var Self {
+    public func new(var x: Integer, var y: Integer, var z: Integer) var Self {
         return Point { x: x, y: y, z: z };
     }
 
-    public func get_x(const self: Self) const i32 {
+    public func get_x(const self: Self) const Integer {
         return self.x;
     }
 
-    public func get_y(const self: Self) const i32 {
+    public func get_y(const self: Self) const Integer {
         return self.y;
     }
 
-    public func get_z(const self: Self) const i32 {
+    public func get_z(const self: Self) const Integer {
         return self.z;
     }
 }
 
-func main() const i32 {
-    var x1: i32 = 1;
-    var y1: i32 = 2;
-    var z1: i32 = 3;
+func main() const Integer {
+    var x1: Integer = 1;
+    var y1: Integer = 2;
+    var z1: Integer = 3;
 
-    var x2: i32 = 2;
-    var y2: i32 = 3;
-    var z2: i32 = 4;
+    var x2: Integer = 2;
+    var y2: Integer = 3;
+    var z2: Integer = 4;
 
     var p1: Point = Point:new(x1, y1, z1);
     var p2: Point = Point:new(x2, y2, z2);
@@ -35,13 +35,13 @@ func main() const i32 {
     return dist_square_of_two_points(p1, p2);
 }
 
-func dist_square_of_two_points(const p1: Point, const p2: Point) const i32 {
-    const p1x: i32 = p1.get_x();
-    const p1y: i32 = p1.get_y();
-    const p1z: i32 = p1.get_z();
-    const p2x: i32 = p2.get_x();
-    const p2y: i32 = p2.get_y();
-    const p2z: i32 = p2.get_z();
+func dist_square_of_two_points(const p1: Point, const p2: Point) const Integer {
+    const p1x: Integer = p1.get_x();
+    const p1y: Integer = p1.get_y();
+    const p1z: Integer = p1.get_z();
+    const p2x: Integer = p2.get_x();
+    const p2y: Integer = p2.get_y();
+    const p2z: Integer = p2.get_z();
 
     return (p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)
         + (p1z - p2z) * (p1z - p2z);
