@@ -299,6 +299,21 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 })
                 .parse_next(input)
         }),
+        '-' => Postfix(30, |input: &mut &str, base: ast::Expression| {
+            '>'.parse_next(input)?;
+            parse_identifier
+                .map(|expr| {
+                    let id = match expr {
+                        ast::Expression::Identifier(id) => id.clone(),
+                        _ => panic!("Expect identifier, but got {:?}", expr),
+                    };
+                    ast::Expression::MethodCall(ast::MethodAccessExpression {
+                        base: Box::new(base.clone()),
+                        method_name: id,
+                    })
+                })
+                .parse_next(input)
+        }),
         _ => fail
     };
 
