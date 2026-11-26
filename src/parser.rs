@@ -112,36 +112,42 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
         "const",
         space1,
         ws!(parse_identifier),
-        ':',
-        opt(ws!(parse_type)),
+        opt((':', ws!(parse_type))),
         '=',
         ws!(parse_expression),
         ';',
     )
-        .map(|(_, _, id, _, ty, _, expr, _)| {
+        .map(|(_, _, id, char_and_ty_opt, _, expr, _)| {
             let id = match id {
                 ast::Expression::Identifier(id) => id.name,
                 _ => panic!("Expected identifier in lhs of const statement"),
             };
-            ast::Statement::ConstDef(ast::ConstDefStatement { name: id, ty, expr })
+            ast::Statement::ConstDef(ast::ConstDefStatement {
+                name: id,
+                ty: char_and_ty_opt.map(|(_, ty)| ty),
+                expr,
+            })
         });
 
     let parse_var_statement = (
         "var",
         space1,
         ws!(parse_identifier),
-        ':',
-        opt(ws!(parse_type)),
+        opt((':', ws!(parse_type))),
         '=',
         ws!(parse_expression),
         ';',
     )
-        .map(|(_, _, id, _, ty, _, expr, _)| {
+        .map(|(_, _, id, char_and_ty_opt, _, expr, _)| {
             let id = match id {
                 ast::Expression::Identifier(id) => id.name,
                 _ => panic!("Expected identifier in lhs of var statement"),
             };
-            ast::Statement::VarDef(ast::VarDefStatement { name: id, ty, expr })
+            ast::Statement::VarDef(ast::VarDefStatement {
+                name: id,
+                ty: char_and_ty_opt.map(|(_, ty)| ty),
+                expr,
+            })
         });
 
     let parse_assignment_statement = (ws!(parse_expression), '=', ws!(parse_expression), ';')
