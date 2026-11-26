@@ -261,12 +261,14 @@ impl SemanticChecker {
         match ast {
             ast::Statement::ConstDef(ast::ConstDefStatement { name, ty, expr }) => {
                 let expr_type = self.check_expression(expr, ctx, curr_struct_scope)?;
-                let annotation = self.type_annotation_to_type(ty)?;
-                if annotation != expr_type {
-                    return Err(SemanticError::IncompatibleType(format!(
-                        "Const statement has incompatible types {:?} (annotation) and {:?} (actual)",
-                        annotation, expr_type
-                    )));
+                if let Some(ty) = ty {
+                    let annotation = self.type_annotation_to_type(ty)?;
+                    if annotation != expr_type {
+                        return Err(SemanticError::IncompatibleType(format!(
+                            "Const statement has incompatible types {:?} (annotation) and {:?} (actual)",
+                            annotation, expr_type
+                        )));
+                    }
                 }
                 let mut new_ctx = ctx.clone();
                 new_ctx.insert(
@@ -304,12 +306,14 @@ impl SemanticChecker {
                 }
 
                 let expr_type = self.check_expression(expr, ctx, curr_struct_scope)?;
-                let annotation = self.type_annotation_to_type(ty)?;
-                if annotation != expr_type {
-                    return Err(SemanticError::IncompatibleType(format!(
-                        "Var statement has incompatible types {:?} (annotation) and {:?} (actual)",
-                        annotation, expr_type
-                    )));
+                if let Some(ty) = ty {
+                    let annotation = self.type_annotation_to_type(ty)?;
+                    if annotation != expr_type {
+                        return Err(SemanticError::IncompatibleType(format!(
+                            "Var statement has incompatible types {:?} (annotation) and {:?} (actual)",
+                            annotation, expr_type
+                        )));
+                    }
                 }
                 let mut new_ctx = ctx.clone();
                 new_ctx.insert(
