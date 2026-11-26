@@ -644,16 +644,16 @@ impl SemanticChecker {
                 }
 
                 // Infer parameter types of the explicit arguments.
-                let actual_arg_types = args
+                let arg_types = args
                     .iter()
                     .map(|arg| self.check_expression(arg, ctx, curr_struct_scope))
                     .collect::<Result<Vec<_>>>()?;
 
-                let ty = match callee_type {
+                let ty = match callee {
                     types::Type::Function(func_type) => {
                         // Check if the number of arguments matches the number of parameters.
                         let expected_param_count = func_type.params.len();
-                        let given_arg_count = actual_arg_types.len();
+                        let given_arg_count = arg_types.len();
                         if given_arg_count != expected_param_count {
                             return Err(SemanticError::IncompatibleType(format!(
                                 "Function has {} parameters, but {} arguments are given",
@@ -681,7 +681,7 @@ impl SemanticChecker {
                         }
 
                         // Check if the args types match.
-                        if actual_arg_types
+                        if arg_types
                             != func_type
                                 .params
                                 .iter()
@@ -690,13 +690,79 @@ impl SemanticChecker {
                         {
                             return Err(SemanticError::IncompatibleType(format!(
                                 "Function has incompatible parameter types: {:?}(declared) vs {:?}(given)",
-                                &actual_arg_types, &func_type.params
+                                &arg_types, &func_type.params
                             )));
                         }
 
                         let ty = (*func_type.return_type).clone();
-                        self.type_of_node.insert(key, ty.clone());
-                        Ok(ty)
+                        ty
+                    }
+                    ast::Expression::MethodAccess(ast::MethodAccessExpression {
+                        base,
+                        method_name,
+                    }) => {
+                        let callee_type = match callee_type {
+                            types::Type::Function(func_type) => func_type,
+                            _ => unreachable!(),
+                        };
+
+                        // Check if the number of arguments matches the number of parameters.
+                        let expected_param_count = callee_type.params.len();
+                        let given_arg_count = 1 + arg_types.len();
+                        if given_arg_count != expected_param_count {
+                            return Err(SemanticError::IncompatibleType(format!(
+                                "Function has {} parameters, but {} arguments are given",
+                                expected_param_count, given_arg_count
+                            )));
+                        }
+
+                        // Check mutability of parameters.
+                        let param_mutabilities = callee_type
+                            .params
+                            .iter()
+                            .map(|(mutability, _)| *mutability == types::Mutability::Var)
+                            .collect::<Vec<_>>();
+                        let mut arg_mutabilities = args
+                            .iter()
+                            .map(|arg| self.check_expression_mutable(arg, ctx, curr_struct_scope))
+                            .collect::<Result<Vec<_>>>()?;
+                        let receiver_mutability =
+                            self.check_expression_mutable(base, ctx, curr_struct_scope)?;
+                        arg_mutabilities.insert(0, receiver_mutability);
+                        for i in 0..param_mutabilities.len() {
+                            if param_mutabilities[i] && !arg_mutabilities[i] {
+                                return Err(SemanticError::Variable(format!(
+                                    "Parameter {} requires mutable, but a constant is given",
+                                    i
+                                )));
+                            }
+                        }
+
+                        // Check if the args types match.
+                        // Note: The first argument is the receiver, which must be checked.
+                        let mut arg_types = arg_types.clone();
+                        let base_type = self
+                            .type_of_node
+                            .iter()
+                            .find(|(key, _)| **key == (&**base as *const ast::Expression as usize))
+                            .unwrap()
+                            .1;
+                        arg_types.insert(0, base_type.clone());
+                        if arg_types
+                            != callee_type
+                                .params
+                                .iter()
+                                .map(|(_, ty)| ty.clone())
+                                .collect::<Vec<_>>()
+                        {
+                            return Err(SemanticError::IncompatibleType(format!(
+                                "Function has incompatible parameter types: {:?}(declared) vs {:?}(given)",
+                                &arg_types, &callee_type.params
+                            )));
+                        }
+
+                        let ty = *(callee_type.return_type.clone());
+                        ty
                     }
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
