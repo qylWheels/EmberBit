@@ -21,16 +21,8 @@ struct Point {
 }
 
 func main() const Integer {
-    var x1: Integer = 1;
-    var y1: Integer = 2;
-    var z1: Integer = 3;
-
-    var x2: Integer = 2;
-    var y2: Integer = 3;
-    var z2: Integer = 4;
-
-    var p1: Point = Point:new(x1, y1, z1);
-    var p2: Point = Point:new(x2, y2, z2);
+    var p1: Point = Point:new(1, 2, 3);
+    var p2: Point = Point:new(2, 3, 5);
 
     return dist_square_of_two_points(p1, p2);
 }
