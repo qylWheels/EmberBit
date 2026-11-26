@@ -164,7 +164,7 @@ pub struct FieldAccessExpression {
 
 #[derive(Debug, Clone)]
 pub struct MethodAccessExpression {
-    pub obj: Box<Expression>,
+    pub base: Box<Expression>,
     pub method_name: Identifier,
     pub args: Vec<Expression>,
 }
