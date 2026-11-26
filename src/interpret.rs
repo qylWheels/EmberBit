@@ -361,6 +361,11 @@ impl Interpreter {
                     _ => unreachable!(),
                 }
             }
+            ast::Expression::MethodAccess(_) => {
+                unreachable!(
+                    "Method access is desugared to static method access, so it shouldn't appear in the AST"
+                )
+            }
             ast::Expression::StaticMethodAccess(e) => {
                 let struct_def = self.struct_defs.get(&e.struct_name.name).unwrap();
                 let (_, method) = struct_def
