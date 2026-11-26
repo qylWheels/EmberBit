@@ -688,7 +688,9 @@ impl SemanticChecker {
                             )));
                         }
 
-                        (*func_type.return_type).clone()
+                        let ty = (*func_type.return_type).clone();
+                        self.type_of_node.insert(key, ty.clone());
+                        Ok(ty)
                     }
                     other => {
                         return Err(SemanticError::IncompatibleType(format!(
