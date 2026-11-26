@@ -636,6 +636,12 @@ impl SemanticChecker {
             }
             ast::Expression::Call(ast::CallExpression { callee, args }) => {
                 let callee_type = self.check_expression(callee, ctx, curr_struct_scope)?;
+                if !matches!(&callee_type, types::Type::Function(_)) {
+                    return Err(SemanticError::IncompatibleType(format!(
+                        "Callee expression must be of type Function, but {:?} is given",
+                        callee_type
+                    )));
+                }
 
                 // Infer parameter types of the explicit arguments.
                 let actual_arg_types = args
