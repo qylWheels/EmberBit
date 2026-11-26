@@ -719,12 +719,12 @@ impl SemanticChecker {
                     }
                     _ => {
                         // Check if the number of arguments matches the number of parameters.
-                        let expected_param_count = callee_type.params.len();
+                        let expected_arg_count = callee_type.params.len();
                         let given_arg_count = arg_types.len();
-                        if given_arg_count != expected_param_count {
+                        if given_arg_count != expected_arg_count {
                             return Err(SemanticError::IncompatibleType(format!(
                                 "Function has {} parameters, but {} arguments are given",
-                                expected_param_count, given_arg_count
+                                expected_arg_count, given_arg_count
                             )));
                         }
 
@@ -734,12 +734,12 @@ impl SemanticChecker {
                             .iter()
                             .map(|(mutability, _)| *mutability == types::Mutability::Var)
                             .collect::<Vec<_>>();
-                        let param_mutabilities = args
+                        let arg_mutabilities = args
                             .iter()
                             .map(|arg| self.check_expression_mutable(arg, ctx, curr_struct_scope))
                             .collect::<Result<Vec<_>>>()?;
                         for i in 0..annotated_mutabilities.len() {
-                            if annotated_mutabilities[i] && !param_mutabilities[i] {
+                            if annotated_mutabilities[i] && !arg_mutabilities[i] {
                                 return Err(SemanticError::Variable(format!(
                                     "Parameter {} requires mutable, but a constant is given",
                                     i
