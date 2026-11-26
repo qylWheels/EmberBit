@@ -523,10 +523,10 @@ impl SemanticChecker {
                     }
                 };
                 let index_type = self.check_expression(index, ctx, curr_struct_scope)?;
-                if !matches!(&index_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
+                if !matches!(&index_type, types::Type::Trivial(types::TrivialType { name }) if name == "Integer")
                 {
                     return Err(SemanticError::IndexType(format!(
-                        "Index must be of type i32, but {:?} is given",
+                        "Index must be of type Integer, but {:?} is given",
                         index_type
                     )));
                 }
@@ -550,17 +550,17 @@ impl SemanticChecker {
                     }
                 };
 
-                if !matches!(&start_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
+                if !matches!(&start_type, types::Type::Trivial(types::TrivialType { name }) if name == "Integer")
                 {
                     return Err(SemanticError::SliceType(format!(
-                        "Slice start must be of type i32, but {:?} is given",
+                        "Slice start must be of type Integer, but {:?} is given",
                         start_type
                     )));
                 }
-                if !matches!(&end_type, types::Type::Trivial(types::TrivialType { name }) if name == "i32")
+                if !matches!(&end_type, types::Type::Trivial(types::TrivialType { name }) if name == "Integer")
                 {
                     return Err(SemanticError::SliceType(format!(
-                        "Slice end must be of type i32, but {:?} is given",
+                        "Slice end must be of type Integer, but {:?} is given",
                         end_type
                     )));
                 }
@@ -586,7 +586,7 @@ impl SemanticChecker {
             }
             ast::Expression::Integer(ast::IntegerLiteral { value: _ }) => {
                 let ty = types::Type::Trivial(types::TrivialType {
-                    name: "i32".to_string(),
+                    name: "Integer".to_string(),
                 });
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
