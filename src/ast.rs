@@ -53,14 +53,14 @@ pub enum Statement {
 #[derive(Debug, Clone)]
 pub struct ConstDefStatement {
     pub name: String,
-    pub ty: Type,
+    pub ty: Option<Type>,
     pub expr: Expression,
 }
 
 #[derive(Debug, Clone)]
 pub struct VarDefStatement {
     pub name: String,
-    pub ty: Type,
+    pub ty: Option<Type>,
     pub expr: Expression,
 }
 
