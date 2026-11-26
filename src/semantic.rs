@@ -285,15 +285,15 @@ impl SemanticChecker {
                         base,
                         start: _,
                         end: _,
-                    }) => self.check_expression_assignable(base, ctx, curr_struct_scope)?,
+                    }) => self.check_expression_mutable(base, ctx, curr_struct_scope)?,
                     ast::Expression::Index(ast::IndexExpression { base, index: _ }) => {
-                        self.check_expression_assignable(base, ctx, curr_struct_scope)?
+                        self.check_expression_mutable(base, ctx, curr_struct_scope)?
                     }
                     ast::Expression::Identifier(_) => {
-                        self.check_expression_assignable(expr, ctx, curr_struct_scope)?
+                        self.check_expression_mutable(expr, ctx, curr_struct_scope)?
                     }
                     ast::Expression::FieldAccess(_) => {
-                        self.check_expression_assignable(expr, ctx, curr_struct_scope)?
+                        self.check_expression_mutable(expr, ctx, curr_struct_scope)?
                     }
                     _ => true,
                 };
@@ -452,7 +452,7 @@ impl SemanticChecker {
                 .check_expression_mutable(lhs, ctx, curr_struct_scope)?
                 && self.check_expression_mutable(rhs, ctx, curr_struct_scope)?),
             ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field: _ }) => {
-                Ok(self.check_expression_assignable(base, ctx, curr_struct_scope)?)
+                Ok(self.check_expression_mutable(base, ctx, curr_struct_scope)?)
             }
             ast::Expression::Call(ast::CallExpression { callee, args: _ }) => {
                 let callee_type = self.check_expression(callee, ctx, curr_struct_scope)?;
@@ -693,7 +693,7 @@ impl SemanticChecker {
                             .collect::<Vec<_>>();
                         let mut param_mutabilities = Vec::with_capacity(given_arg_count);
                         if let Some(receiver) = receiver {
-                            param_mutabilities.push(self.check_expression_assignable(
+                            param_mutabilities.push(self.check_expression_mutable(
                                 receiver,
                                 ctx,
                                 curr_struct_scope,
@@ -702,7 +702,7 @@ impl SemanticChecker {
                         param_mutabilities.extend(
                             args.iter()
                                 .map(|arg| {
-                                    self.check_expression_assignable(arg, ctx, curr_struct_scope)
+                                    self.check_expression_mutable(arg, ctx, curr_struct_scope)
                                 })
                                 .collect::<Result<Vec<_>>>()?,
                         );
