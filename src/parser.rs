@@ -307,7 +307,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                         ast::Expression::Identifier(id) => id.clone(),
                         _ => panic!("Expect identifier, but got {:?}", expr),
                     };
-                    ast::Expression::MethodCall(ast::MethodAccessExpression {
+                    ast::Expression::MethodAccess(ast::MethodAccessExpression {
                         base: Box::new(base.clone()),
                         method_name: id,
                     })

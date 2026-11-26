@@ -92,7 +92,7 @@ pub enum Expression {
     Identifier(Identifier),
     Struct(StructExpression),
     FieldAccess(FieldAccessExpression),
-    MethodCall(MethodAccessExpression),
+    MethodAccess(MethodAccessExpression),
     StaticMethodAccess(StaticMethodAccessExpression),
 }
 
