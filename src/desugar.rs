@@ -251,6 +251,19 @@ impl<'a> Desugarer<'a> {
                     field: field.clone(),
                 })
             }
+            Expression::MethodAccess(MethodAccessExpression { base, method_name }) => {
+                let base_type = self.semantic_checker.get_type_of_node(&**base).unwrap();
+                let struct_name = match base_type {
+                    types::Type::Trivial(types::TrivialType { name }) => name.clone(),
+                    _ => unreachable!(),
+                };
+                Expression::StaticMethodAccess(StaticMethodAccessExpression {
+                    struct_name: Identifier {
+                        name: struct_name.clone(),
+                    },
+                    method_name: method_name.clone(),
+                })
+            }
             Expression::StaticMethodAccess(StaticMethodAccessExpression {
                 struct_name,
                 method_name,
