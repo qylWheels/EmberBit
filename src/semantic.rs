@@ -282,24 +282,8 @@ impl SemanticChecker {
             }
             ast::Statement::VarDef(ast::VarDefStatement { name, ty, expr }) => {
                 // It is not allowed to create variable reference on not-assignable expression.
-                let expr_assignable = match expr {
-                    ast::Expression::Slice(ast::SliceExpression {
-                        base,
-                        start: _,
-                        end: _,
-                    }) => self.check_expression_mutable(base, ctx, curr_struct_scope)?,
-                    ast::Expression::Index(ast::IndexExpression { base, index: _ }) => {
-                        self.check_expression_mutable(base, ctx, curr_struct_scope)?
-                    }
-                    ast::Expression::Identifier(_) => {
-                        self.check_expression_mutable(expr, ctx, curr_struct_scope)?
-                    }
-                    ast::Expression::FieldAccess(_) => {
-                        self.check_expression_mutable(expr, ctx, curr_struct_scope)?
-                    }
-                    _ => true,
-                };
-                if !expr_assignable {
+                let expr_mutable = self.check_expression_mutable(expr, ctx, curr_struct_scope)?;
+                if !expr_mutable {
                     return Err(SemanticError::Variable(
                         "Variable reference on non-assignable expression".into(),
                     ));
