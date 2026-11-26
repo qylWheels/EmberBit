@@ -441,6 +441,50 @@ impl SemanticChecker {
         }
     }
 
+    pub fn check_expression_mutable(
+        &mut self,
+        expr: &ast::Expression,
+        ctx: &HashMap<String, IdentifierProperties>,
+        curr_struct_scope: Option<&str>,
+    ) -> Result<bool> {
+        match expr {
+            ast::Expression::Binary(ast::BinaryExpression { lhs, op: _, rhs }) => Ok(self
+                .check_expression_mutable(lhs, ctx, curr_struct_scope)?
+                && self.check_expression_mutable(rhs, ctx, curr_struct_scope)?),
+            ast::Expression::FieldAccess(ast::FieldAccessExpression { base, field: _ }) => {
+                Ok(self.check_expression_assignable(base, ctx, curr_struct_scope)?)
+            }
+            ast::Expression::Call(ast::CallExpression { callee, args: _ }) => {
+                let callee_type = self.check_expression(callee, ctx, curr_struct_scope)?;
+                match callee_type {
+                    types::Type::Function(types::FunctionType {
+                        params: _,
+                        return_type_mutability,
+                        return_type: _,
+                    }) => Ok(return_type_mutability == types::Mutability::Var),
+                    _ => Err(SemanticError::IncompatibleType(format!(
+                        "Callee in call expression must be a function, but it has type {:?}",
+                        callee_type
+                    ))),
+                }
+            }
+            ast::Expression::Identifier(ast::Identifier { name }) => match ctx.get(name) {
+                Some(props) => Ok(props.variable),
+                None => Err(SemanticError::UnboundedIdentifier(format!(
+                    "Identifier {} is not declared",
+                    name
+                ))),
+            },
+            // Integer literal and struct expression must be mutable, or we can't assign it to var.
+            ast::Expression::Integer(_) | ast::Expression::Struct(_) => Ok(true),
+            // Static method access must be immutable.
+            ast::Expression::StaticMethodAccess(_) => Ok(false),
+            other => {
+                unimplemented!("We won't implement {:?} now", other)
+            }
+        }
+    }
+
     fn is_method_of_struct(
         &mut self,
         expr: &ast::Expression,
