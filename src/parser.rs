@@ -299,8 +299,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 })
                 .parse_next(input)
         }),
-        '-' => Postfix(30, |input: &mut &str, base: ast::Expression| {
-            '>'.parse_next(input)?;
+        '#' => Postfix(30, |input: &mut &str, base: ast::Expression| {
             parse_identifier
                 .map(|expr| {
                     let id = match expr {
