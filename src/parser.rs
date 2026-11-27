@@ -376,9 +376,9 @@ fn parse_struct_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     alt((
+        parse_bool,
         parse_identifier,
         parse_integer,
-        parse_bool,
         parse_paren_expr,
     ))
     .parse_next(input)
