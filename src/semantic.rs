@@ -932,7 +932,8 @@ impl SemanticChecker {
                         method_name.clone()
                     )));
                 }
-                let method_type = self.check_function(&method.1.clone(), ctx, curr_struct_scope)?;
+                let method_type =
+                    self.check_function(&method.1.clone(), ctx, Some(&struct_name))?;
 
                 let ty = types::Type::Function(method_type);
                 self.type_of_node.insert(key, ty.clone());
