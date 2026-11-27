@@ -28,6 +28,11 @@ struct Line {
         return Line { start: start, end: end };
     }
 
+    public func set_start(var self: Self, var new_start: Point) var Self {
+        self.start = new_start;
+        return self;
+    }
+
     public func length_2(const self: Self) const Integer {
         const start_x = self.start->get_x();
         const start_y = self.start->get_y();
@@ -44,7 +49,9 @@ struct Line {
 func main() const Integer {
     var p1 = Point::new(1, 2, 3);
     var p2 = Point::new(2, 3, 5);
-    const line = Line::new(p1, p2);
+
+    var line = Line::new(p1, p2);
+    line->set_start(Point::new(6, 6, 6));
 
     return line->length_2();
 }
