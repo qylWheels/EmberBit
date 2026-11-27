@@ -46,6 +46,16 @@ struct Line {
     }
 }
 
+func fibonacci(const n: Integer) const Integer {
+    var result = 0;
+    if n <= 2 {
+        result = 1;
+    } else {
+        result = fibonacci(n - 2) + fibonacci(n - 1);
+    }
+    return result;
+}
+
 func main() const Integer {
     var p1 = Point::new(1, 2, 3);
     var p2 = Point::new(2, 3, 5);
@@ -53,5 +63,5 @@ func main() const Integer {
     var line = Line::new(p1, p2);
     line->set_start(Point::new(6, 6, 6));
 
-    return line->length_2();
+    return fibonacci(25);
 }
