@@ -285,42 +285,44 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 })
             }),
         )),
-        "+".map(|_| {
-            Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
-                Ok(ast::Expression::Binary(ast::BinaryExpression {
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
-                    op: ast::BinaryOp::Add,
-                }))
-            })
-        }),
-        "-".map(|_| {
-            Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
-                Ok(ast::Expression::Binary(ast::BinaryExpression {
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
-                    op: ast::BinaryOp::Sub,
-                }))
-            })
-        }),
-        "*".map(|_| {
-            Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
-                Ok(ast::Expression::Binary(ast::BinaryExpression {
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
-                    op: ast::BinaryOp::Mul,
-                }))
-            })
-        }),
-        "/".map(|_| {
-            Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
-                Ok(ast::Expression::Binary(ast::BinaryExpression {
-                    lhs: Box::new(lhs),
-                    rhs: Box::new(rhs),
-                    op: ast::BinaryOp::Div,
-                }))
-            })
-        }),
+        alt((
+            "+".map(|_| {
+                Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                    Ok(ast::Expression::Binary(ast::BinaryExpression {
+                        lhs: Box::new(lhs),
+                        rhs: Box::new(rhs),
+                        op: ast::BinaryOp::Add,
+                    }))
+                })
+            }),
+            "-".map(|_| {
+                Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                    Ok(ast::Expression::Binary(ast::BinaryExpression {
+                        lhs: Box::new(lhs),
+                        rhs: Box::new(rhs),
+                        op: ast::BinaryOp::Sub,
+                    }))
+                })
+            }),
+            "*".map(|_| {
+                Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                    Ok(ast::Expression::Binary(ast::BinaryExpression {
+                        lhs: Box::new(lhs),
+                        rhs: Box::new(rhs),
+                        op: ast::BinaryOp::Mul,
+                    }))
+                })
+            }),
+            "/".map(|_| {
+                Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                    Ok(ast::Expression::Binary(ast::BinaryExpression {
+                        lhs: Box::new(lhs),
+                        rhs: Box::new(rhs),
+                        op: ast::BinaryOp::Div,
+                    }))
+                })
+            }),
+        )),
         fail,
     ));
     let postfix_parser = alt((
