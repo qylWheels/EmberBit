@@ -375,7 +375,13 @@ fn parse_struct_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
 }
 
 fn parse_atom_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
-    alt((parse_identifier, parse_integer, parse_paren_expr)).parse_next(input)
+    alt((
+        parse_identifier,
+        parse_integer,
+        parse_bool,
+        parse_paren_expr,
+    ))
+    .parse_next(input)
 }
 
 fn parse_paren_expr<'a>(input: &mut &'a str) -> Result<ast::Expression> {
@@ -403,6 +409,12 @@ fn parse_integer<'a>(input: &mut &'a str) -> Result<ast::Expression> {
             },
         )
         .map(|i| ast::Expression::Integer(ast::IntegerLiteral { value: i }))
+        .parse_next(input)
+}
+
+fn parse_bool<'a>(input: &mut &'a str) -> Result<ast::Expression> {
+    alt(("true", "false"))
+        .map(|s| ast::Expression::Bool(ast::BoolLiteral { value: s == "true" }))
         .parse_next(input)
 }
 
