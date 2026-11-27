@@ -245,6 +245,24 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 ))
             })
         }),
+        "==".map(|_| {
+            Infix::Left(18, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Eq,
+                }))
+            })
+        }),
+        "!=".map(|_| {
+            Infix::Left(18, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Ne,
+                }))
+            })
+        }),
         "+".map(|_| {
             Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
