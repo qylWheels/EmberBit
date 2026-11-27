@@ -153,6 +153,18 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
     let parse_assignment_statement = (ws!(parse_expression), '=', ws!(parse_expression), ';')
         .map(|(lhs, _, rhs, _)| ast::Statement::Assignment(ast::AssignmentStatement { lhs, rhs }));
 
+    let parse_while_statement = (
+        "while",
+        space1,
+        ws!(parse_expression),
+        '{',
+        ws!(repeat(0.., ws!(parse_statement))),
+        '}',
+    )
+        .map(|(_, _, condition, _, body, _)| {
+            ast::Statement::While(ast::WhileStatement { condition, body })
+        });
+
     let parse_return_statement = ("return", space1, parse_expression, ';')
         .map(|(_, _, expr, _)| ast::Statement::Return(ast::ReturnStatement { expr }));
 
@@ -163,6 +175,7 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
         parse_const_statement,
         parse_var_statement,
         parse_assignment_statement,
+        parse_while_statement,
         parse_return_statement,
         parse_expression_statement,
     ))
