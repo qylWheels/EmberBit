@@ -143,6 +143,21 @@ impl<'a> Desugarer<'a> {
                     rhs: self.desugar_expression(rhs),
                 })
             }
+            Statement::If(IfStatement {
+                condition,
+                then_branch,
+                else_branch,
+            }) => Statement::If(IfStatement {
+                condition: Box::new(self.desugar_expression(condition)),
+                then_branch: then_branch
+                    .iter()
+                    .map(|stmt| self.desugar_statement(stmt))
+                    .collect(),
+                else_branch: else_branch
+                    .iter()
+                    .map(|stmt| self.desugar_statement(stmt))
+                    .collect(),
+            }),
             Statement::While(WhileStatement { condition, body }) => {
                 Statement::While(WhileStatement {
                     condition: self.desugar_expression(condition),
