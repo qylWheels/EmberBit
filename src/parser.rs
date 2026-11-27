@@ -210,6 +210,28 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
     let infix_parser = alt((
+        "::".map(|_| {
+            Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                let struct_name = match lhs {
+                    ast::Expression::Identifier(id) => ast::Identifier {
+                        name: id.name.clone(),
+                    },
+                    _ => panic!("Expected identifier in lhs of static method access"),
+                };
+                let method_name = match rhs {
+                    ast::Expression::Identifier(id) => ast::Identifier {
+                        name: id.name.clone(),
+                    },
+                    _ => panic!("Expected identifier in rhs of static method access"),
+                };
+                Ok(ast::Expression::StaticMethodAccess(
+                    ast::StaticMethodAccessExpression {
+                        struct_name,
+                        method_name,
+                    },
+                ))
+            })
+        }),
         "+".map(|_| {
             Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
@@ -244,28 +266,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     rhs: Box::new(rhs),
                     op: ast::BinaryOp::Div,
                 }))
-            })
-        }),
-        ":".map(|_| {
-            Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
-                let struct_name = match lhs {
-                    ast::Expression::Identifier(id) => ast::Identifier {
-                        name: id.name.clone(),
-                    },
-                    _ => panic!("Expected identifier in lhs of static method access"),
-                };
-                let method_name = match rhs {
-                    ast::Expression::Identifier(id) => ast::Identifier {
-                        name: id.name.clone(),
-                    },
-                    _ => panic!("Expected identifier in rhs of static method access"),
-                };
-                Ok(ast::Expression::StaticMethodAccess(
-                    ast::StaticMethodAccessExpression {
-                        struct_name,
-                        method_name,
-                    },
-                ))
             })
         }),
         fail,
