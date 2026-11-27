@@ -271,7 +271,23 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         fail,
     ));
     let postfix_parser = alt((
-        '['.map(|_| {
+        "->".map(|_| {
+            Postfix(30, |input: &mut &str, base: ast::Expression| {
+                parse_identifier
+                    .map(|expr| {
+                        let id = match expr {
+                            ast::Expression::Identifier(id) => id.clone(),
+                            _ => panic!("Expect identifier, but got {:?}", expr),
+                        };
+                        ast::Expression::MethodAccess(ast::MethodAccessExpression {
+                            base: Box::new(base.clone()),
+                            method_name: id,
+                        })
+                    })
+                    .parse_next(input)
+            })
+        }),
+        "[".map(|_| {
             Postfix(32, |content: &mut &str, base: ast::Expression| {
                 let parse_index = parse_expression.map(|e: ast::Expression| {
                     ast::Expression::Index(ast::IndexExpression {
@@ -293,7 +309,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     .parse_next(content)
             })
         }),
-        '('.map(|_| {
+        "(".map(|_| {
             Postfix(31, |input: &mut &str, base: ast::Expression| {
                 (separated(0.., parse_expression, ','), ')')
                     .map(|(args, _)| {
@@ -305,7 +321,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     .parse_next(input)
             })
         }),
-        '.'.map(|_| {
+        ".".map(|_| {
             Postfix(30, |input: &mut &str, base: ast::Expression| {
                 parse_identifier
                     .map(|expr| {
@@ -316,22 +332,6 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                         ast::Expression::FieldAccess(ast::FieldAccessExpression {
                             base: Box::new(base.clone()),
                             field: id,
-                        })
-                    })
-                    .parse_next(input)
-            })
-        }),
-        '#'.map(|_| {
-            Postfix(30, |input: &mut &str, base: ast::Expression| {
-                parse_identifier
-                    .map(|expr| {
-                        let id = match expr {
-                            ast::Expression::Identifier(id) => id.clone(),
-                            _ => panic!("Expect identifier, but got {:?}", expr),
-                        };
-                        ast::Expression::MethodAccess(ast::MethodAccessExpression {
-                            base: Box::new(base.clone()),
-                            method_name: id,
                         })
                     })
                     .parse_next(input)
