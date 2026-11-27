@@ -210,7 +210,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
         _ => fail
     };
     let infix_parser = alt((
-        ('+'.map(|_| {
+        "+".map(|_| {
             Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
                     lhs: Box::new(lhs),
@@ -218,8 +218,8 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                     op: ast::BinaryOp::Add,
                 }))
             })
-        })),
-        '-'.map(|_| {
+        }),
+        "-".map(|_| {
             Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
                     lhs: Box::new(lhs),
@@ -228,7 +228,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 }))
             })
         }),
-        '*'.map(|_| {
+        "*".map(|_| {
             Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
                     lhs: Box::new(lhs),
@@ -237,7 +237,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 }))
             })
         }),
-        '/'.map(|_| {
+        "/".map(|_| {
             Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 Ok(ast::Expression::Binary(ast::BinaryExpression {
                     lhs: Box::new(lhs),
@@ -246,7 +246,7 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
                 }))
             })
         }),
-        ':'.map(|_| {
+        ":".map(|_| {
             Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
                 let struct_name = match lhs {
                     ast::Expression::Identifier(id) => ast::Identifier {
