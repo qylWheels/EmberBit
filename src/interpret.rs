@@ -168,6 +168,25 @@ impl Interpreter {
                 let reference = self.interpret_lvalue_expression(&s.lhs, &mut newenv)?;
                 unsafe { *reference = value };
             }
+            ast::Statement::If(s) => {
+                let condition = self.interpret_expression(&s.condition, &newenv)?;
+                match *(condition.0.borrow()) {
+                    Value::Bool(b) => {
+                        if b {
+                            // Execute then branch.
+                            for stmt in &s.then_branch {
+                                newenv = self.interpret_statement(stmt, &newenv)?;
+                            }
+                        } else {
+                            // Execute else branch.
+                            for stmt in &s.else_branch {
+                                newenv = self.interpret_statement(stmt, &newenv)?;
+                            }
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
             ast::Statement::While(s) => loop {
                 // Evaluate condition.
                 let condition = self.interpret_expression(&s.condition, &newenv)?;
