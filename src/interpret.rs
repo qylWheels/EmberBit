@@ -292,6 +292,11 @@ impl Interpreter {
                 self.values.insert(value.clone());
                 Ok(value)
             }
+            ast::Expression::Bool(e) => {
+                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Bool(e.value))));
+                self.values.insert(value.clone());
+                Ok(value)
+            }
             ast::Expression::Call(e) => {
                 let callee = self.interpret_expression(e.callee.as_ref(), env)?;
                 let args = e
