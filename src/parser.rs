@@ -161,8 +161,8 @@ fn parse_statement<'a>(input: &mut &'a str) -> Result<ast::Statement> {
         ws!(repeat(0.., ws!(parse_statement))),
         '}',
         opt((
-            "else",
-            ws!("{"),
+            ws!("else"),
+            "{",
             ws!(repeat(0.., ws!(parse_statement))),
             "}",
         )),
