@@ -96,6 +96,7 @@ pub enum Expression {
     Index(IndexExpression),
     Call(CallExpression),
     Integer(IntegerLiteral),
+    Bool(BoolLiteral),
     Identifier(Identifier),
     Struct(StructExpression),
     FieldAccess(FieldAccessExpression),
@@ -150,6 +151,11 @@ pub struct CallExpression {
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     pub value: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct BoolLiteral {
+    pub value: bool,
 }
 
 #[derive(Debug, Clone)]
