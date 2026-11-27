@@ -120,6 +120,14 @@ pub enum BinaryOp {
     Sub,
     Mul,
     Div,
+
+    // Compare operators.
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
 }
 
 #[derive(Debug, Clone)]
