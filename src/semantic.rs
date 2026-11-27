@@ -634,8 +634,25 @@ impl SemanticChecker {
                         op, lhs_type, rhs_type
                     )));
                 }
-                self.type_of_node.insert(key, lhs_type.clone());
-                Ok(lhs_type)
+
+                let ty = match op {
+                    ast::BinaryOp::Add
+                    | ast::BinaryOp::Sub
+                    | ast::BinaryOp::Mul
+                    | ast::BinaryOp::Div => lhs_type,
+
+                    ast::BinaryOp::Eq
+                    | ast::BinaryOp::Ne
+                    | ast::BinaryOp::Lt
+                    | ast::BinaryOp::Gt
+                    | ast::BinaryOp::Le
+                    | ast::BinaryOp::Ge => types::Type::Trivial(types::TrivialType {
+                        name: "Bool".to_string(),
+                    }),
+                };
+
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
             }
             ast::Expression::Integer(ast::IntegerLiteral { value: _ }) => {
                 let ty = types::Type::Trivial(types::TrivialType {
