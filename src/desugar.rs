@@ -143,6 +143,15 @@ impl<'a> Desugarer<'a> {
                     rhs: self.desugar_expression(rhs),
                 })
             }
+            Statement::While(WhileStatement { condition, body }) => {
+                Statement::While(WhileStatement {
+                    condition: self.desugar_expression(condition),
+                    body: body
+                        .iter()
+                        .map(|stmt| self.desugar_statement(stmt))
+                        .collect(),
+                })
+            }
             Statement::Return(ReturnStatement { expr }) => Statement::Return(ReturnStatement {
                 expr: self.desugar_expression(expr),
             }),
