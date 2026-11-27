@@ -644,6 +644,13 @@ impl SemanticChecker {
                 self.type_of_node.insert(key, ty.clone());
                 Ok(ty)
             }
+            ast::Expression::Bool(ast::BoolLiteral { value: _ }) => {
+                let ty = types::Type::Trivial(types::TrivialType {
+                    name: "Bool".to_string(),
+                });
+                self.type_of_node.insert(key, ty.clone());
+                Ok(ty)
+            }
             ast::Expression::Identifier(ast::Identifier { name }) => {
                 let props = ctx.get(name).ok_or_else(|| {
                     SemanticError::UnboundedIdentifier(format!(
