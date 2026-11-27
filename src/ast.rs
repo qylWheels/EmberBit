@@ -46,6 +46,7 @@ pub enum Statement {
     ConstDef(ConstDefStatement),
     VarDef(VarDefStatement),
     Assignment(AssignmentStatement),
+    While(WhileStatement),
     Return(ReturnStatement),
     Expression(ExpressionStatement),
 }
@@ -68,6 +69,12 @@ pub struct VarDefStatement {
 pub struct AssignmentStatement {
     pub lhs: Expression,
     pub rhs: Expression,
+}
+
+#[derive(Debug, Clone)]
+pub struct WhileStatement {
+    pub condition: Expression,
+    pub body: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]
