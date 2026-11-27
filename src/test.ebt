@@ -20,21 +20,31 @@ struct Point {
     }
 }
 
+struct Line {
+    private start: Point;
+    private end: Point;
+
+    public func new(var start: Point, var end: Point) var Self {
+        return Line { start: start, end: end };
+    }
+
+    public func length_2(const self: Self) const Integer {
+        const start_x = self.start->get_x();
+        const start_y = self.start->get_y();
+        const start_z = self.start->get_z();
+        const end_x = self.end->get_x();
+        const end_y = self.end->get_y();
+        const end_z = self.end->get_z();
+
+        return (start_x - end_x) * (start_x - end_x) + (start_y - end_y) * (start_y - end_y)
+            + (start_z - end_z) * (start_z - end_z);
+    }
+}
+
 func main() const Integer {
     var p1 = Point::new(1, 2, 3);
     var p2 = Point::new(2, 3, 5);
+    const line = Line::new(p1, p2);
 
-    return dist_square_of_two_points(p1, p2);
-}
-
-func dist_square_of_two_points(const p1: Point, const p2: Point) const Integer {
-    const p1x = p1->get_x();
-    const p1y = p1->get_y();
-    const p1z = p1->get_z();
-    const p2x = p2->get_x();
-    const p2y = p2->get_y();
-    const p2z = p2->get_z();
-
-    return (p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)
-        + (p1z - p2z) * (p1z - p2z);
+    return line->length_2();
 }
