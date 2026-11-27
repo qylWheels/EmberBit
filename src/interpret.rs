@@ -38,6 +38,7 @@ pub struct Function {
 
 #[derive(Debug, Clone)]
 pub enum Value {
+    Bool(bool),
     Integer(i64),
     Array(Array),
     Slice(Slice),
@@ -167,6 +168,23 @@ impl Interpreter {
                 let reference = self.interpret_lvalue_expression(&s.lhs, &mut newenv)?;
                 unsafe { *reference = value };
             }
+            ast::Statement::While(s) => loop {
+                // Evaluate condition.
+                let condition = self.interpret_expression(&s.condition, &newenv)?;
+                match *(condition.0.borrow()) {
+                    Value::Bool(b) => {
+                        if !b {
+                            break;
+                        }
+
+                        // Execute body.
+                        for stmt in &s.body {
+                            newenv = self.interpret_statement(stmt, &newenv)?;
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            },
             ast::Statement::Return(_) => {
                 return Err(InterpretError::ReturnOutsideFunction);
             }
