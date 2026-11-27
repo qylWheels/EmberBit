@@ -257,7 +257,9 @@ impl<'a> Desugarer<'a> {
                 struct_name: struct_name.clone(),
                 method_name: method_name.clone(),
             }),
-            Expression::Integer(_) | Expression::Identifier(_) => expr.clone(),
+            Expression::Integer(_) | Expression::Bool(_) | Expression::Identifier(_) => {
+                expr.clone()
+            }
         }
     }
 }
