@@ -238,12 +238,28 @@ impl Interpreter {
                     _ => unreachable!(),
                 };
                 let result = match e.op {
-                    ast::BinaryOp::Add => lhs_int + rhs_int,
-                    ast::BinaryOp::Sub => lhs_int - rhs_int,
-                    ast::BinaryOp::Mul => lhs_int * rhs_int,
-                    ast::BinaryOp::Div => lhs_int / rhs_int,
+                    ast::BinaryOp::Add => Some(lhs_int + rhs_int),
+                    ast::BinaryOp::Sub => Some(lhs_int - rhs_int),
+                    ast::BinaryOp::Mul => Some(lhs_int * rhs_int),
+                    ast::BinaryOp::Div => Some(lhs_int / rhs_int),
+                    _ => None,
                 };
-                let value = InnerMutableValueRef(Rc::new(RefCell::new(Value::Integer(result))));
+                let result_bool = match e.op {
+                    ast::BinaryOp::Eq => Some(lhs_int == rhs_int),
+                    ast::BinaryOp::Ne => Some(lhs_int != rhs_int),
+                    ast::BinaryOp::Lt => Some(lhs_int < rhs_int),
+                    ast::BinaryOp::Gt => Some(lhs_int > rhs_int),
+                    ast::BinaryOp::Le => Some(lhs_int <= rhs_int),
+                    ast::BinaryOp::Ge => Some(lhs_int >= rhs_int),
+                    _ => None,
+                };
+                let value = match (result, result_bool) {
+                    (Some(i), None) => {
+                        InnerMutableValueRef(Rc::new(RefCell::new(Value::Integer(i))))
+                    }
+                    (None, Some(b)) => InnerMutableValueRef(Rc::new(RefCell::new(Value::Bool(b)))),
+                    _ => unreachable!(),
+                };
                 self.values.insert(value.clone());
                 Ok(value)
             }
