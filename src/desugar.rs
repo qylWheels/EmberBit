@@ -1,3 +1,4 @@
+use crate::ast;
 use crate::ast::*;
 use crate::semantic;
 use crate::types;
@@ -194,39 +195,15 @@ impl<'a> Desugarer<'a> {
                     .map(|arg| self.desugar_expression(arg))
                     .collect::<Vec<_>>();
 
-                // If the callee is a method of a struct, the receiver becomes the first
-                // argument. The type is looked up on the *original* base node, because
-                // `type_of_node` is keyed by the address of the checked AST nodes.
-                if let (
-                    Expression::FieldAccess(FieldAccessExpression {
-                        base: original_base,
-                        field,
-                    }),
-                    Expression::FieldAccess(FieldAccessExpression {
-                        base: desugared_base,
-                        ..
-                    }),
-                ) = (&**callee, &desugared_callee)
-                {
-                    let base_type = self
-                        .semantic_checker
-                        .get_type_of_node(&**original_base)
-                        .unwrap();
-                    let struct_name = match base_type {
-                        types::Type::Trivial(types::TrivialType { name }) => name,
-                        _ => unreachable!(),
-                    };
-                    let struct_info = self
-                        .semantic_checker
-                        .get_struct_type_info(struct_name)
-                        .unwrap();
-                    let is_method = struct_info
-                        .methods
-                        .iter()
-                        .any(|(_, func_def)| &func_def.name == &field.name);
-                    if is_method {
-                        desugared_args.insert(0, desugared_base.as_ref().clone());
+                // If the is a method of a struct, the receiver becomes the first argument.
+                match &**callee {
+                    ast::Expression::MethodAccess(ast::MethodAccessExpression {
+                        base,
+                        method_name: _,
+                    }) => {
+                        desugared_args.insert(0, self.desugar_expression(base));
                     }
+                    _ => {}
                 }
 
                 Expression::Call(CallExpression {
