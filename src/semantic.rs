@@ -372,8 +372,9 @@ impl SemanticChecker {
                 }
 
                 // Check body statements.
+                let mut new_ctx = ctx.clone();
                 for stmt in body {
-                    self.check_statement(stmt, ctx, curr_struct_scope)?;
+                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
                 }
 
                 Ok(ctx.clone())
