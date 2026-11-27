@@ -209,112 +209,136 @@ fn parse_expression<'a>(input: &mut &'a str) -> Result<ast::Expression> {
     let prefix_parser = dispatch! {any;
         _ => fail
     };
-    let infix_parser = dispatch! {any;
-        '+' => Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
-            Ok(ast::Expression::Binary(ast::BinaryExpression {
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-                op: ast::BinaryOp::Add,
-            }))
+    let infix_parser = alt((
+        ('+'.map(|_| {
+            Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Add,
+                }))
+            })
+        })),
+        '-'.map(|_| {
+            Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Sub,
+                }))
+            })
         }),
-        '-' => Infix::Left(24, |_, lhs: ast::Expression, rhs: ast::Expression| {
-            Ok(ast::Expression::Binary(ast::BinaryExpression {
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-                op: ast::BinaryOp::Sub,
-            }))
+        '*'.map(|_| {
+            Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Mul,
+                }))
+            })
         }),
-        '*' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
-            Ok(ast::Expression::Binary(ast::BinaryExpression {
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-                op: ast::BinaryOp::Mul,
-            }))
+        '/'.map(|_| {
+            Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                Ok(ast::Expression::Binary(ast::BinaryExpression {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op: ast::BinaryOp::Div,
+                }))
+            })
         }),
-        '/' => Infix::Left(28, |_, lhs: ast::Expression, rhs: ast::Expression| {
-            Ok(ast::Expression::Binary(ast::BinaryExpression {
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-                op: ast::BinaryOp::Div,
-            }))
+        ':'.map(|_| {
+            Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
+                let struct_name = match lhs {
+                    ast::Expression::Identifier(id) => ast::Identifier {
+                        name: id.name.clone(),
+                    },
+                    _ => panic!("Expected identifier in lhs of static method access"),
+                };
+                let method_name = match rhs {
+                    ast::Expression::Identifier(id) => ast::Identifier {
+                        name: id.name.clone(),
+                    },
+                    _ => panic!("Expected identifier in rhs of static method access"),
+                };
+                Ok(ast::Expression::StaticMethodAccess(
+                    ast::StaticMethodAccessExpression {
+                        struct_name,
+                        method_name,
+                    },
+                ))
+            })
         }),
-        ':' => Infix::Left(32, |_, lhs: ast::Expression, rhs: ast::Expression| {
-            let struct_name = match lhs {
-                ast::Expression::Identifier(id) => ast::Identifier { name: id.name.clone() },
-                _ => panic!("Expected identifier in lhs of static method access"),
-            };
-            let method_name = match rhs {
-                ast::Expression::Identifier(id) => ast::Identifier { name: id.name.clone() },
-                _ => panic!("Expected identifier in rhs of static method access"),
-            };
-            Ok(ast::Expression::StaticMethodAccess(ast::StaticMethodAccessExpression {
-                struct_name,
-                method_name,
-            }))
-        }),
-        _ => fail
-    };
-    let postfix_parser = dispatch! {any;
-        '[' => Postfix(32, |content: &mut &str, base: ast::Expression| {
-            let parse_index = parse_expression
-                .map(|e: ast::Expression|
-                    ast::Expression::Index(
-                        ast::IndexExpression {
-                            base: Box::new(base.clone()),
-                            index: Box::new(e),
-                        }
-                    )
-                );
-            let parse_range = (parse_expression, ':', parse_expression)
-                .map(|(start, _, end): (ast::Expression, _, ast::Expression)|
-                    ast::Expression::Slice(
-                        ast::SliceExpression {
+        fail,
+    ));
+    let postfix_parser = alt((
+        '['.map(|_| {
+            Postfix(32, |content: &mut &str, base: ast::Expression| {
+                let parse_index = parse_expression.map(|e: ast::Expression| {
+                    ast::Expression::Index(ast::IndexExpression {
+                        base: Box::new(base.clone()),
+                        index: Box::new(e),
+                    })
+                });
+                let parse_range = (parse_expression, ':', parse_expression).map(
+                    |(start, _, end): (ast::Expression, _, ast::Expression)| {
+                        ast::Expression::Slice(ast::SliceExpression {
                             base: Box::new(base.clone()),
                             start: Box::new(start.clone()),
                             end: Box::new(end.clone()),
-                        }
-                    )
+                        })
+                    },
                 );
-            (alt((parse_range, parse_index)), ']').map(|(e, _)| e).parse_next(content)
+                (alt((parse_range, parse_index)), ']')
+                    .map(|(e, _)| e)
+                    .parse_next(content)
+            })
         }),
-        '(' => Postfix(31, |input: &mut &str, base: ast::Expression| {
-            (separated(0.., parse_expression, ','), ')')
-                .map(|(args, _)| ast::Expression::Call(ast::CallExpression {
-                    callee: Box::new(base.clone()),
-                    args,
-                }))
-                .parse_next(input)
-        }),
-        '.' => Postfix(30, |input: &mut &str, base: ast::Expression| {
-            parse_identifier
-                .map(|expr| {
-                    let id = match expr {
-                        ast::Expression::Identifier(id) => id.clone(),
-                        _ => panic!("Expect identifier, but got {:?}", expr),
-                    };
-                    ast::Expression::FieldAccess(ast::FieldAccessExpression {
-                        base: Box::new(base.clone()),
-                        field: id,
+        '('.map(|_| {
+            Postfix(31, |input: &mut &str, base: ast::Expression| {
+                (separated(0.., parse_expression, ','), ')')
+                    .map(|(args, _)| {
+                        ast::Expression::Call(ast::CallExpression {
+                            callee: Box::new(base.clone()),
+                            args,
+                        })
                     })
-                })
-                .parse_next(input)
+                    .parse_next(input)
+            })
         }),
-        '#' => Postfix(30, |input: &mut &str, base: ast::Expression| {
-            parse_identifier
-                .map(|expr| {
-                    let id = match expr {
-                        ast::Expression::Identifier(id) => id.clone(),
-                        _ => panic!("Expect identifier, but got {:?}", expr),
-                    };
-                    ast::Expression::MethodAccess(ast::MethodAccessExpression {
-                        base: Box::new(base.clone()),
-                        method_name: id,
+        '.'.map(|_| {
+            Postfix(30, |input: &mut &str, base: ast::Expression| {
+                parse_identifier
+                    .map(|expr| {
+                        let id = match expr {
+                            ast::Expression::Identifier(id) => id.clone(),
+                            _ => panic!("Expect identifier, but got {:?}", expr),
+                        };
+                        ast::Expression::FieldAccess(ast::FieldAccessExpression {
+                            base: Box::new(base.clone()),
+                            field: id,
+                        })
                     })
-                })
-                .parse_next(input)
+                    .parse_next(input)
+            })
         }),
-        _ => fail
-    };
+        '#'.map(|_| {
+            Postfix(30, |input: &mut &str, base: ast::Expression| {
+                parse_identifier
+                    .map(|expr| {
+                        let id = match expr {
+                            ast::Expression::Identifier(id) => id.clone(),
+                            _ => panic!("Expect identifier, but got {:?}", expr),
+                        };
+                        ast::Expression::MethodAccess(ast::MethodAccessExpression {
+                            base: Box::new(base.clone()),
+                            method_name: id,
+                        })
+                    })
+                    .parse_next(input)
+            })
+        }),
+        fail,
+    ));
 
     expression(ws!(alt((parse_struct_expr, parse_atom_expression))))
         .prefix(ws!(prefix_parser))
