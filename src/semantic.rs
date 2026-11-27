@@ -325,6 +325,27 @@ impl SemanticChecker {
                 }
                 Ok(ctx.clone())
             }
+            ast::Statement::While(ast::WhileStatement { condition, body }) => {
+                // Check condition expression type.
+                let cond_expr_type = self.check_expression(condition, ctx, curr_struct_scope)?;
+                if cond_expr_type
+                    != types::Type::Trivial(types::TrivialType {
+                        name: "Bool".to_string(),
+                    })
+                {
+                    return Err(SemanticError::IncompatibleType(format!(
+                        "While statement requires Bool condition expression, but got {:?}",
+                        cond_expr_type
+                    )));
+                }
+
+                // Check body statements.
+                for stmt in body {
+                    self.check_statement(stmt, ctx, curr_struct_scope)?;
+                }
+
+                Ok(ctx.clone())
+            }
             ast::Statement::Return(ast::ReturnStatement { expr: _ }) => {
                 // Return statement should be checked in check_function.
                 Ok(ctx.clone())
