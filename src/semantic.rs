@@ -518,7 +518,9 @@ impl SemanticChecker {
                 ))),
             },
             // Integer literal and struct expression must be mutable, or we can't assign it to var.
-            ast::Expression::Integer(_) | ast::Expression::Struct(_) => Ok(true),
+            ast::Expression::Bool(_) | ast::Expression::Integer(_) | ast::Expression::Struct(_) => {
+                Ok(true)
+            }
             // Static method access must be immutable.
             ast::Expression::StaticMethodAccess(_) => Ok(false),
             other => {
