@@ -325,6 +325,38 @@ impl SemanticChecker {
                 }
                 Ok(ctx.clone())
             }
+            ast::Statement::If(ast::IfStatement {
+                condition,
+                then_branch,
+                else_branch,
+            }) => {
+                // Check condition expression type.
+                let cond_expr_type = self.check_expression(condition, ctx, curr_struct_scope)?;
+                if cond_expr_type
+                    != types::Type::Trivial(types::TrivialType {
+                        name: "Bool".to_string(),
+                    })
+                {
+                    return Err(SemanticError::IncompatibleType(format!(
+                        "If statement requires Bool condition expression, but got {:?}",
+                        cond_expr_type
+                    )));
+                }
+
+                // Check then branch statements.
+                let mut new_ctx = ctx.clone();
+                for stmt in then_branch {
+                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
+                }
+
+                // Check else branch statements.
+                let mut new_ctx = ctx.clone();
+                for stmt in else_branch {
+                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
+                }
+
+                Ok(ctx.clone())
+            }
             ast::Statement::While(ast::WhileStatement { condition, body }) => {
                 // Check condition expression type.
                 let cond_expr_type = self.check_expression(condition, ctx, curr_struct_scope)?;
