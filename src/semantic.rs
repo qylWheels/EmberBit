@@ -688,6 +688,22 @@ impl SemanticChecker {
                     )));
                 }
 
+                // Check if lhs and rhs are of type Integer.
+                let is_integer_type = |id: &str, ty: &types::Type| {
+                    let err = SemanticError::IncompatibleType(format!(
+                        "Binary expression {} must be of type Integer, but {:?} is given",
+                        id, ty
+                    ));
+                    match ty {
+                        types::Type::Trivial(types::TrivialType { name }) if name == "Integer" => {
+                            Ok(())
+                        }
+                        _ => Err(err),
+                    }
+                };
+                is_integer_type("lhs", &lhs_type)?;
+                is_integer_type("rhs", &rhs_type)?;
+
                 let ty = match op {
                     ast::BinaryOp::Add
                     | ast::BinaryOp::Sub
