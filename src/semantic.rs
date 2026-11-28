@@ -15,6 +15,7 @@ pub enum SemanticError {
     ArgumentType(Vec<SemanticError>),
     Visibility(String),
     DuplicateField(String),
+    MissingField(String),
 }
 
 pub type Result<T> = std::result::Result<T, SemanticError>;
@@ -884,6 +885,24 @@ impl SemanticChecker {
                                 struct_name
                             )));
                         }
+                    }
+                }
+
+                // It is not allowed to give the same field more than once.
+                let mut provided_field_names = HashSet::new();
+                for (field_name, _) in fields.iter() {
+                    if !provided_field_names.insert(field_name.clone()) {
+                        return Err(SemanticError::DuplicateField(field_name.clone()));
+                    }
+                }
+
+                // Every field of the struct must be given.
+                for (_, field_name, _) in &struct_fields {
+                    if !provided_field_names.contains(field_name) {
+                        return Err(SemanticError::MissingField(format!(
+                            "Struct {} is missing field {}",
+                            struct_name, field_name
+                        )));
                     }
                 }
 
