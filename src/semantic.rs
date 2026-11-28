@@ -214,26 +214,21 @@ impl SemanticChecker {
             );
         }
 
+        // Check function body.
         for stmt in &ast.body {
-            curr_ctx = self.check_statement(stmt, &curr_ctx, curr_struct_scope)?;
+            curr_ctx =
+                self.check_statement(stmt, &curr_ctx, curr_struct_scope, &annotated_return_type)?;
         }
 
+        // Check if last statement is return statement.
         let last_stmt = ast
             .body
             .last()
             .ok_or_else(|| SemanticError::IncompatibleType("Empty function body".into()))?;
-
-        let actual_return_type =
-            if let ast::Statement::Return(ast::ReturnStatement { expr }) = last_stmt {
-                self.check_expression(expr, &curr_ctx, curr_struct_scope)?
-            } else {
-                types::Type::Tuple(types::TupleType { elem_types: vec![] })
-            };
-
-        if annotated_return_type != actual_return_type {
+        if !matches!(last_stmt, ast::Statement::Return(_)) {
             return Err(SemanticError::IncompatibleType(format!(
-                "Function {} has incompatible return types {:?} (annotation) and {:?} (actual)",
-                ast.name, annotated_return_type, actual_return_type
+                "Function {} must end with a return statement",
+                ast.name
             )));
         }
 
@@ -243,7 +238,7 @@ impl SemanticChecker {
                 .map(|(mutability, _, ty)| (mutability.clone(), ty.clone()))
                 .collect(),
             return_type_mutability: ast.return_type_mutability.clone(),
-            return_type: Box::new(actual_return_type),
+            return_type: Box::new(annotated_return_type),
         };
         self.type_of_node.insert(
             ast as *const ast::FunctionDefinition as usize,
@@ -257,6 +252,7 @@ impl SemanticChecker {
         ast: &ast::Statement,
         ctx: &HashMap<String, IdentifierProperties>,
         curr_struct_scope: Option<&str>,
+        annotated_return_type: &types::Type,
     ) -> Result<HashMap<String, IdentifierProperties>> {
         match ast {
             ast::Statement::ConstDef(ast::ConstDefStatement { name, ty, expr }) => {
@@ -346,13 +342,23 @@ impl SemanticChecker {
                 // Check then branch statements.
                 let mut new_ctx = ctx.clone();
                 for stmt in then_branch {
-                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
+                    new_ctx = self.check_statement(
+                        stmt,
+                        &new_ctx,
+                        curr_struct_scope,
+                        annotated_return_type,
+                    )?;
                 }
 
                 // Check else branch statements.
                 let mut new_ctx = ctx.clone();
                 for stmt in else_branch {
-                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
+                    new_ctx = self.check_statement(
+                        stmt,
+                        &new_ctx,
+                        curr_struct_scope,
+                        annotated_return_type,
+                    )?;
                 }
 
                 Ok(ctx.clone())
@@ -374,13 +380,24 @@ impl SemanticChecker {
                 // Check body statements.
                 let mut new_ctx = ctx.clone();
                 for stmt in body {
-                    new_ctx = self.check_statement(stmt, &new_ctx, curr_struct_scope)?;
+                    new_ctx = self.check_statement(
+                        stmt,
+                        &new_ctx,
+                        curr_struct_scope,
+                        annotated_return_type,
+                    )?;
                 }
 
                 Ok(ctx.clone())
             }
-            ast::Statement::Return(ast::ReturnStatement { expr: _ }) => {
-                // Return statement should be checked in check_function.
+            ast::Statement::Return(ast::ReturnStatement { expr }) => {
+                let actual_return_type = self.check_expression(expr, ctx, curr_struct_scope)?;
+                if actual_return_type != *annotated_return_type {
+                    return Err(SemanticError::IncompatibleType(format!(
+                        "Return statement has incompatible type {:?} (actual) vs {:?} (annotated)",
+                        actual_return_type, annotated_return_type
+                    )));
+                }
                 Ok(ctx.clone())
             }
             ast::Statement::Expression(ast::ExpressionStatement { expr }) => {
